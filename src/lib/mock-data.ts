@@ -19,6 +19,18 @@ export interface Startup {
   red_flags: string[];
   decision_path: string[];
   risks: string[];
+  score_breakdown: ScoreFactor[];
+}
+
+export interface ScoreFactor {
+  criterion: string;
+  value: string;
+  impact: number;
+ max_impact: number;
+ direction: 'positive' | 'negative' | 'neutral';
+ explanation: string;
+  threshold?: string;
+  benchmark?: string;
 }
 
 const industries = [
@@ -125,6 +137,158 @@ function generateStartups(): Startup[] {
       }
     }
 
+    // Score breakdown — WHY each factor contributed
+    const score_breakdown: ScoreFactor[] = [];
+
+    // 1. Previous founder exits
+    score_breakdown.push({
+      criterion: "Previous Founder Exits",
+      value: has_previous_exit ? "Yes — prior successful exit" : "No — first-time founder",
+      impact: has_previous_exit ? 20 : 0,
+      max_impact: 20,
+      direction: has_previous_exit ? "positive" : "negative",
+      explanation: has_previous_exit
+        ? "Founders who have previously built and sold a company have a ~3x higher success rate on their next venture. They have proven execution ability, established networks, and learned from past failures."
+        : "75% of first-time founders fail to reach Series A. This does not mean the startup will fail — but it increases execution risk significantly. Mitigated by other positive signals like funding velocity and team size.",
+      threshold: "Has the founder built and exited a company before? (Yes/No)",
+      benchmark: "~15% of startup founders have prior exits. Those who do succeed at 2-3x the rate of first-timers.",
+    });
+
+    // 2. Business model
+    score_breakdown.push({
+      criterion: "Business Model (B2B vs B2C)",
+      value: is_b2b ? "B2B" : "B2C",
+      impact: is_b2b ? 10 : 0,
+      max_impact: 10,
+      direction: is_b2b ? "positive" : "negative",
+      explanation: is_b2b
+        ? "B2B startups in the SaaS/enterprise space generally have higher survival rates. Revenue is more predictable (subscriptions/contracts), customer acquisition cost is lower, and churn is manageable. The Central Asian B2B market is underserved — a structural advantage."
+        : "B2C startups face higher customer acquisition costs, lower retention, and stronger competition from global players. In the Central Asian market, B2C success often depends on local market knowledge and network effects that are hard to replicate.",
+      threshold: "Is the primary customer a business (B2B) or consumer (B2C)?",
+      benchmark: "B2B SaaS startups have a ~60% higher survival rate to Series A compared to B2C startups at the same stage.",
+    });
+
+    // 3. Total funding
+    const fundingImpact = funding_total_usd > 300000 ? 10 : 0;
+    score_breakdown.push({
+      criterion: "Total Funding Raised",
+      value: funding_total_usd > 0 ? `$${(funding_total_usd / 1000).toFixed(0)}K across ${funding_rounds} round${funding_rounds !== 1 ? 's' : ''}` : "$0 — no external funding",
+      impact: fundingImpact,
+      max_impact: 10,
+      direction: funding_total_usd > 300000 ? "positive" : funding_total_usd > 0 ? "neutral" : "negative",
+      explanation: funding_total_usd > 300000
+        ? `Raising $300K+ is a strong signal that at least one professional investor has validated the startup's potential. This capital provides runway to reach the next milestone (typically 12-18 months).`
+        : funding_total_usd > 0
+        ? `Some funding was raised, but below the $300K threshold where investor conviction becomes meaningful. The startup may need to demonstrate more traction before the next round.`
+        : "No external funding means the startup is entirely self-funded. While bootstrapping shows founder commitment, it also means no professional investor has validated the idea. For venture-scale returns, external validation matters.",
+      threshold: "Is total funding > $300K? (Yes: +10 points)",
+      benchmark: "Startups that raise $300K+ before their first anniversary have a 2.5x higher probability of reaching Series A.",
+    });
+
+    // 4. Funding rounds
+    const roundsImpact = funding_rounds >= 2 ? 10 : 0;
+    score_breakdown.push({
+      criterion: "Number of Funding Rounds",
+      value: `${funding_rounds} round${funding_rounds !== 1 ? 's' : ''}`,
+      impact: roundsImpact,
+      max_impact: 10,
+      direction: funding_rounds >= 2 ? "positive" : funding_rounds === 1 ? "neutral" : "negative",
+      explanation: funding_rounds >= 2
+        ? "Multiple funding rounds indicate sustained investor confidence. The first investor was followed by others — a strong signal that the startup is hitting milestones. It also means the startup is not solely dependent on a single investor."
+        : funding_rounds === 1
+        ? "A single funding round means the startup's fate is tied to one investor's decision to follow on. If that investor passes on the next round, the startup faces a funding cliff. This is the #1 cause of early-stage startup death."
+        : "No funding rounds completed. The startup has not yet passed any investor's due diligence process.",
+      threshold: "Are there 2+ funding rounds? (Yes: +10 points, No: 0 points)",
+      benchmark: "Startups with 2+ rounds have a 70% higher rate of reaching profitability compared to single-round startups.",
+    });
+
+    // 5. Time to first funding
+    let timeImpact = 0;
+    let timeDir: 'positive' | 'negative' | 'neutral' = 'neutral';
+    let timeExpl = '';
+    if (funding_rounds > 0) {
+      if (time_to_first_funding_months <= 8) {
+        timeImpact = 8; timeDir = 'positive';
+        timeExpl = `Funded within ${time_to_first_funding_months} months — this is very fast. It means the founder was able to convince an investor quickly, which correlates with strong market signal, founder credibility, and product-market fit. Startups funded within 8 months have the highest survival rates.`;
+      } else if (time_to_first_funding_months <= 12) {
+        timeImpact = 5; timeDir = 'positive';
+        timeExpl = `Funded within ${time_to_first_funding_months} months — within the healthy range. This indicates reasonable market interest without excessive delay.`;
+      } else if (time_to_first_funding_months <= 18) {
+        timeImpact = 0; timeDir = 'neutral';
+        timeExpl = `Took ${time_to_first_funding_months} months to secure first funding. This is slower than average and may indicate difficulty in convincing investors, an unclear value proposition, or a small addressable market.`;
+      } else {
+        timeImpact = -5; timeDir = 'negative';
+        timeExpl = `Took ${time_to_first_funding_months} months to get first funding — significantly above average. Prolonged time-to-funding is a negative signal suggesting the startup struggled to find product-market fit or lacked investor conviction.`;
+      }
+    } else {
+      timeExpl = "No funding data available — this factor is not scored.";
+    }
+    score_breakdown.push({
+      criterion: "Time to First Funding",
+      value: funding_rounds > 0 ? `${time_to_first_funding_months} months from founding` : "N/A — no funding",
+      impact: timeImpact,
+      max_impact: 8,
+      direction: timeDir,
+      explanation: timeExpl,
+      threshold: "Funded within 8 months: +8 pts | 8-12 months: +5 pts | 12-18 months: 0 pts | 18+ months: -5 pts",
+      benchmark: "Median time to first funding for successful startups is ~9 months. The 75th percentile is 15 months.",
+    });
+
+    // 6. Team size
+    let teamImpact = 0;
+    let teamDir: 'positive' | 'negative' | 'neutral' = 'neutral';
+    let teamExpl = '';
+    if (team_size >= 5 && team_size <= 15) {
+      teamImpact = 7; teamDir = 'positive';
+      teamExpl = `Team of ${team_size} is within the optimal range for this stage. Large enough to cover product, sales, and operations, but lean enough to maintain focus and low burn rate.`;
+    } else if (team_size < 5) {
+      teamImpact = 0; teamDir = 'negative';
+      teamExpl = `Team of ${team_size} is below the recommended minimum of 4-5 for this stage. A team this small may struggle to execute simultaneously on product development, customer acquisition, and operations. High risk of founder burnout.`;
+    } else if (team_size > 15) {
+      teamImpact = has_previous_exit ? 0 : -5; teamDir = has_previous_exit ? 'neutral' : 'negative';
+      teamExpl = has_previous_exit
+        ? `Team of ${team_size} is large, but the founder's prior exit experience reduces the risk of mismanagement. The larger team may be appropriate if the startup is in a scaling phase.`
+        : `Team of ${team_size} without a prior exit is concerning. Large teams burn cash faster, require more coordination, and increase the risk of misaligned incentives. Without proven leadership, this is a red flag.`;
+    } else {
+      teamImpact = 3; teamDir = 'neutral';
+      teamExpl = `Team of ${team_size} — adequate size for early stage.`;
+    }
+    score_breakdown.push({
+      criterion: "Team Size",
+      value: `${team_size} ${team_size === 1 ? 'person' : 'people'} (full-time)`,
+      impact: teamImpact,
+      max_impact: 7,
+      direction: teamDir,
+      explanation: teamExpl,
+      threshold: "5-15 people: +7 pts | <5 or >15 (no exit): 0/-5 pts",
+      benchmark: "Optimal team size for seed-stage is 5-12. Teams below 4 have 2x higher failure rate. Teams above 15 without revenue have 1.8x higher burn rate.",
+    });
+
+    // 7. Revenue (bonus)
+    if (sales_amount_usd > 0) {
+      score_breakdown.push({
+        criterion: "Revenue Validation",
+        value: `$${(sales_amount_usd / 1000).toFixed(0)}K in sales`,
+        impact: 5,
+        max_impact: 5,
+        direction: "positive",
+        explanation: `Revenue of $${(sales_amount_usd / 1000).toFixed(0)}K proves that real customers are willing to pay. This is the strongest form of market validation — stronger than funding, stronger than user signups. It significantly reduces the risk of building something nobody wants.`,
+        threshold: "Is revenue > $0? (Yes: +5 bonus points)",
+        benchmark: "Only ~40% of seed-stage startups have any revenue. Those that do are 2x more likely to reach Series A.",
+      });
+    } else {
+      score_breakdown.push({
+        criterion: "Revenue Validation",
+        value: "$0 — no revenue yet",
+        impact: 0,
+        max_impact: 5,
+        direction: "negative",
+        explanation: "No revenue means the startup has not yet proven that customers will pay for the product. This is expected for very early-stage startups, but it increases the risk that the product-market fit assumption is wrong.",
+        threshold: "Is revenue > $0? (Yes: +5 bonus points)",
+        benchmark: "Only ~40% of seed-stage startups have any revenue. Those that do are 2x more likely to reach Series A.",
+      });
+    }
+
     // Risk analysis
     const risks: string[] = [];
     if (!has_previous_exit) {
@@ -164,6 +328,7 @@ function generateStartups(): Startup[] {
       red_flags,
       decision_path,
       risks,
+      score_breakdown,
     });
   }
 

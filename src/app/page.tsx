@@ -277,9 +277,13 @@ function DashboardScreen({ onSelectStartup, onNavigate }: { onSelectStartup: (s:
 
 /* ========== SCREEN 3: STARTUP DETAIL ========== */
 function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => void }) {
-  const verdictColor = startup.score >= 65 ? 'text-emerald-600' : startup.score >= 35 ? 'text-amber-600' : 'text-red-600';
+  const [expandedFactor, setExpandedFactor] = useState<number | null>(null);
   const verdictLabel = startup.score >= 65 ? 'HIGH POTENTIAL' : startup.score >= 35 ? 'MODERATE POTENTIAL' : 'LOW POTENTIAL';
-  const verdictBg = startup.score >= 65 ? 'bg-emerald-50 border-emerald-200' : startup.score >= 35 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
+  const verdictBg = startup.score >= 65 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : startup.score >= 35 ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-red-50 border-red-200 text-red-700';
+  const baseScore = 30;
+  const maxPossible = 70;
+  const totalPositive = startup.score_breakdown.filter(f => f.impact > 0).reduce((s, f) => s + f.impact, 0);
+  const totalNegative = startup.score_breakdown.filter(f => f.impact < 0).reduce((s, f) => s + Math.abs(f.impact), 0);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -295,7 +299,7 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold" style={{ color: 'var(--df-navy)' }}>{startup.name}</h1>
-                <Badge className={verdictBg + ' text-xs font-semibold'} style={{ color: `var(${startup.score >= 65 ? '--df-green' : startup.score >= 35 ? '--df-amber' : '--df-red'})` }}>
+                <Badge className={verdictBg + ' text-xs font-semibold'}>
                   {verdictLabel}
                 </Badge>
               </div>
@@ -317,8 +321,85 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
         </CardContent>
       </Card>
 
+      {/* SCORE BREAKDOWN — THE TRANSPARENCY SECTION */}
+      <Card className="border-blue-200/60 mb-5" style={{ backgroundColor: '#F8FAFF' }}>
+        <CardHeader className="pb-2 pt-4 px-5">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--df-navy)' }}>
+              <Brain className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Why This Score?
+            </CardTitle>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span>Base: {baseScore}</span>
+              <span className="text-emerald-600 font-medium">+{totalPositive} positive</span>
+              {totalNegative > 0 && <span className="text-red-600 font-medium">-{totalNegative} negative</span>}
+              <span className="font-bold text-foreground">= {startup.score}%</span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-5 pb-5 space-y-2">
+          {startup.score_breakdown.map((factor, i) => {
+            const isExpanded = expandedFactor === i;
+            const barColor = factor.direction === 'positive' ? 'bg-emerald-500' : factor.direction === 'negative' ? 'bg-red-400' : 'bg-gray-300';
+            const barWidth = factor.max_impact > 0 ? `${(Math.abs(factor.impact) / factor.max_impact) * 100}%` : '0%';
+            const iconColor = factor.direction === 'positive' ? 'text-emerald-600' : factor.direction === 'negative' ? 'text-red-500' : 'text-gray-400';
+            const Icon = factor.direction === 'positive' ? CheckCircle2 : factor.direction === 'negative' ? XCircle : AlertTriangle;
+
+            return (
+              <div key={i} className={`rounded-xl border transition-colors ${isExpanded ? 'border-blue-200 bg-white shadow-sm' : 'border-transparent hover:border-gray-200'}`}>
+                <button
+                  onClick={() => setExpandedFactor(isExpanded ? null : i)}
+                  className="w-full text-left px-4 py-3 flex items-center gap-3"
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${iconColor}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-foreground">{factor.criterion}</span>
+                      <span className={`text-xs font-bold ${factor.impact > 0 ? 'text-emerald-600' : factor.impact < 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                        {factor.impact > 0 ? `+${factor.impact}` : factor.impact < 0 ? `${factor.impact}` : '0'} pts
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: barWidth, minWidth: factor.impact !== 0 ? '4px' : '0' }} />
+                      </div>
+                      <span className="text-[11px] text-muted-foreground shrink-0 w-32 text-right truncate">{factor.value}</span>
+                    </div>
+                  </div>
+                  <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                </button>
+
+                {isExpanded && (
+                  <div className="px-4 pb-4 pt-0 space-y-3">
+                    <div className="bg-gray-50 rounded-lg p-3.5">
+                      <p className="text-xs text-foreground/80 leading-relaxed">{factor.explanation}</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {factor.threshold && (
+                        <div className="bg-blue-50 rounded-lg p-2.5">
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 mb-0.5">Scoring Rule</div>
+                          <p className="text-[11px] text-blue-800">{factor.threshold}</p>
+                        </div>
+                      )}
+                      {factor.benchmark && (
+                        <div className="bg-gray-50 rounded-lg p-2.5">
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">Industry Benchmark</div>
+                          <p className="text-[11px] text-foreground/70">{factor.benchmark}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <p className="text-[10px] text-muted-foreground pt-2 px-1">
+            Click any criterion to see the full explanation, scoring rule, and industry benchmark. All data points come from the startup's application.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Strengths + Red Flags */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        {/* Strengths */}
         <Card className="border-emerald-200/60">
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-emerald-700">
@@ -336,8 +417,6 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
             </ul>
           </CardContent>
         </Card>
-
-        {/* Red Flags */}
         <Card className="border-red-200/60">
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-red-700">
@@ -361,7 +440,7 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
       <Card className="border-gray-200/80 mb-5">
         <CardHeader className="pb-2 pt-4 px-5">
           <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--df-navy)' }}>
-            <TreePine className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Decision Tree Logic
+            <TreePine className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Decision Tree — The Exact Path
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5">
@@ -381,8 +460,7 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
             })}
           </div>
           <p className="text-[11px] text-muted-foreground mt-3">
-            This decision path is generated by a Decision Tree classifier trained on 40,000+ real startup outcomes.
-            Every evaluation follows the same transparent, auditable logic.
+            This is the exact path the Decision Tree followed. Each node is a yes/no question. The final label is the recommendation. Unlike black-box AI, you can audit every single decision.
           </p>
         </CardContent>
       </Card>
@@ -407,7 +485,7 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
       <Card className="border-gray-200/80">
         <CardHeader className="pb-2 pt-4 px-5">
           <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
-            <BarChart3 className="w-4 h-4" /> Raw Evaluation Data
+            <BarChart3 className="w-4 h-4" /> Raw Application Data
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5">
