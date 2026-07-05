@@ -210,6 +210,18 @@ function DashboardScreen({ onSelectStartup, onNavigate }: { onSelectStartup: (s:
         </div>
       </div>
 
+      {/* Click hint */}
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-full px-3 py-1.5">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+          </span>
+          Click any startup to see full transparency report
+          <ChevronRight className="w-3 h-3 text-blue-500" />
+        </div>
+      </div>
+
       {/* Table */}
       <Card className="border-gray-200/80 overflow-hidden">
         <div className="overflow-x-auto">
@@ -222,6 +234,7 @@ function DashboardScreen({ onSelectStartup, onNavigate }: { onSelectStartup: (s:
                 <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Team</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Funding</th>
                 <th className="text-right py-3 px-4 text-xs font-semibold text-muted-foreground">Score</th>
+                <th className="py-3 px-3 w-8"></th>
               </tr>
             </thead>
             <tbody>
@@ -229,11 +242,11 @@ function DashboardScreen({ onSelectStartup, onNavigate }: { onSelectStartup: (s:
                 <tr
                   key={s.id}
                   onClick={() => onSelectStartup(s)}
-                  className="border-b last:border-0 hover:bg-blue-50/50 cursor-pointer transition-colors"
+                  className="border-b last:border-0 hover:bg-blue-50/50 cursor-pointer transition-all group"
                 >
                   <td className="py-3 px-4 text-xs text-muted-foreground">{page * perPage + i + 1}</td>
                   <td className="py-3 px-4">
-                    <div className="font-medium text-sm">{s.name}</div>
+                    <div className="font-medium text-sm group-hover:text-blue-600 transition-colors">{s.name}</div>
                     <div className="text-xs text-muted-foreground md:hidden">{s.industry} &middot; {s.is_b2b ? 'B2B' : 'B2C'}</div>
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
@@ -246,6 +259,9 @@ function DashboardScreen({ onSelectStartup, onNavigate }: { onSelectStartup: (s:
                   </td>
                   <td className="py-3 px-4 text-right">
                     <ScoreBadge score={s.score} />
+                  </td>
+                  <td className="py-3 px-3">
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
                   </td>
                 </tr>
               ))}
