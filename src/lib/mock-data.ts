@@ -84,18 +84,30 @@ const founderNames = [
   "Farrukh Saidov", "Dilorom Alimova", "Kamoliddin Normatov"
 ];
 
+// Deterministic PRNG (mulberry32) — keeps server and client renders identical
+function mulberry32(seed: number) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(20260705);
+
 function generateStartups(): Startup[] {
   const startups: Startup[] = [];
   
   for (let i = 0; i < 50; i++) {
     const industry = industries[i % industries.length];
     const is_b2b = b2bIndustries.has(industry);
-    const has_previous_exit = Math.random() < 0.15;
-    const team_size = Math.max(1, Math.round(Math.random() * 25 + 1));
-    const funding_total_usd = Math.round((Math.random() * 2000000 + (has_previous_exit ? 500000 : 0)) / 10000) * 10000;
+    const has_previous_exit = rand() < 0.15;
+    const team_size = Math.max(1, Math.round(rand() * 25 + 1));
+    const funding_total_usd = Math.round((rand() * 2000000 + (has_previous_exit ? 500000 : 0)) / 10000) * 10000;
     const funding_rounds = funding_total_usd === 0 ? 0 : Math.max(1, Math.min(4, Math.round(Math.log2(funding_total_usd / 50000 + 1))));
-    const time_to_first_funding_months = funding_rounds === 0 ? 0 : Math.max(1, Math.round(Math.random() * 24 + 2));
-    const sales_amount_usd = Math.random() < 0.6 ? 0 : Math.round(Math.random() * 100000);
+    const time_to_first_funding_months = funding_rounds === 0 ? 0 : Math.max(1, Math.round(rand() * 24 + 2));
+    const sales_amount_usd = rand() < 0.6 ? 0 : Math.round(rand() * 100000);
 
     // ML scoring logic (mirrors decision tree)
     let score = 30; // base
@@ -108,7 +120,7 @@ function generateStartups(): Startup[] {
     if (team_size >= 5 && team_size <= 15) score += 7;
     else if (team_size > 15 && !has_previous_exit) score -= 5;
     if (sales_amount_usd > 0) score += 5;
-    score = Math.max(5, Math.min(98, score + Math.round(Math.random() * 10 - 5)));
+    score = Math.max(5, Math.min(98, score + Math.round(rand() * 10 - 5)));
 
     const verdict: "high" | "moderate" | "low" = score >= 65 ? "high" : score >= 35 ? "moderate" : "low";
 

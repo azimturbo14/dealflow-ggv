@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Newsreader, IBM_Plex_Mono } from "next/font/google";
+import { Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const instrumentSans = Instrument_Sans({
+  variable: "--font-instrument",
   subsets: ["latin"],
-  style: ["normal", "italic"],
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -47,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${newsreader.variable} ${plexMono.variable} antialiased bg-background text-foreground`}
+        className={`${instrumentSans.variable} ${plexMono.variable} antialiased bg-background text-foreground`}
       >
         {children}
         <Toaster />
