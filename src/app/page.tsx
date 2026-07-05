@@ -505,14 +505,26 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
             <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Market Risks</span>
           </div>
           <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3.5">
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              {startup.market_research.competition === 'High'
-                ? `High competition in ${startup.industry} — ${startup.market_research.competition === 'High' ? 'established players and well-funded competitors dominate. Differentiation is critical.' : 'the market has room for new entrants with a clear value proposition.'} Market growth of ${startup.market_research.growth_rate} is strong, but competition may compress margins.`
-                : startup.market_research.competition === 'Low'
-                ? `Low competition in ${startup.industry} — few local players exist, creating first-mover advantages. However, the market is less proven and may require more education and customer development effort.`
-                : `Moderate competition in ${startup.industry} — the market is established enough to validate demand but not yet saturated. Positioning and speed of execution will determine market share.`
-              }
-            </p>
+            <ul className="text-xs text-foreground/80 space-y-1.5">
+              {startup.market_research.competition === 'High' ? (
+                <>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-blue-400 mt-1.5 shrink-0" />High competition in {startup.industry} — established players and well-funded competitors dominate</li>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-blue-400 mt-1.5 shrink-0" />Differentiation is critical to stand out</li>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-blue-400 mt-1.5 shrink-0" />Market growth of {startup.market_research.growth_rate} is strong, but competition may compress margins</li>
+                </>
+              ) : startup.market_research.competition === 'Low' ? (
+                <>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" />Low competition in {startup.industry} — few local players exist</li>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" />First-mover advantages available</li>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" />Market is less proven — may require education and customer development effort</li>
+                </>
+              ) : (
+                <>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />Moderate competition in {startup.industry} — demand is validated but not saturated</li>
+                  <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />Positioning and speed of execution will determine market share</li>
+                </>
+              )}
+            </ul>
           </div>
 
           <div className="flex items-center gap-2 mb-1 mt-5">
@@ -520,15 +532,17 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
             <span className="text-xs font-semibold text-purple-700 uppercase tracking-wider">Macroeconomic Risks</span>
           </div>
           <div className="bg-purple-50/50 border border-purple-100 rounded-lg p-3.5">
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              {startup.macro_analysis.regulatory_risk === 'High'
-                ? `High regulatory risk in ${startup.industry} — compliance requirements add 6-12 months to sales cycles and may require product modifications for local certification. Budget allocation uncertainty is a concern.`
-                : startup.macro_analysis.regulatory_risk === 'Medium'
-                ? `Moderate regulatory environment — some compliance requirements exist but are manageable. Regulatory changes are possible but tend to be industry-friendly.`
-                : `Low regulatory risk — minimal compliance burden for ${startup.industry}. This reduces go-to-market friction and allows faster iteration.`
-              }
-              {' '}Inflation at {startup.macro_analysis.inflation} erodes purchasing power. {startup.macro_analysis.currency_stability}.
-            </p>
+            <ul className="text-xs text-foreground/80 space-y-1.5">
+              {startup.macro_analysis.regulatory_risk === 'High' ? (
+                <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-red-400 mt-1.5 shrink-0" />High regulatory risk — compliance adds 6-12 months to sales cycles, local certification required</li>
+              ) : startup.macro_analysis.regulatory_risk === 'Medium' ? (
+                <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />Moderate regulatory environment — manageable compliance, changes tend to be industry-friendly</li>
+              ) : (
+                <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" />Low regulatory risk — minimal compliance burden, faster go-to-market</li>
+              )}
+              <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-purple-400 mt-1.5 shrink-0" />Inflation at {startup.macro_analysis.inflation} erodes purchasing power</li>
+              <li className="flex gap-2"><span className="w-1 h-1 rounded-full bg-purple-400 mt-1.5 shrink-0" />{startup.macro_analysis.currency_stability}</li>
+            </ul>
           </div>
         </CardContent>
       </Card>
@@ -536,29 +550,53 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
       {/* Market Research */}
       <Card className="border-gray-200/80 mb-5">
         <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--df-navy)' }}>
-            <TrendingUp className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Market Research — {startup.industry}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--df-navy)' }}>
+              <TrendingUp className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Market Research — {startup.industry}
+            </CardTitle>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${startup.market_research.market_viable ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              {startup.market_research.market_viable ? '✓ Market Viable' : '✗ Market Challenged'}
+            </span>
+          </div>
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <div className="text-[10px] text-blue-600 uppercase tracking-wider font-semibold mb-0.5">TAM</div>
-              <div className="text-lg font-bold text-blue-800" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.tam}</div>
+          {/* Stats row: TAM, SAM, SOM, Growth, Competition, Capture */}
+          <div className="grid grid-cols-3 gap-2.5 mb-3">
+            <div className="bg-blue-50 rounded-lg p-2.5 text-center">
+              <div className="text-[9px] text-blue-600 uppercase tracking-wider font-semibold mb-0.5">TAM (Total Market)</div>
+              <div className="text-base font-bold text-blue-800" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.tam}</div>
+              <div className="text-[9px] text-blue-500 mt-0.5">Total addressable market</div>
             </div>
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <div className="text-[10px] text-blue-600 uppercase tracking-wider font-semibold mb-0.5">SAM</div>
-              <div className="text-lg font-bold text-blue-800" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.sam}</div>
+            <div className="bg-blue-50 rounded-lg p-2.5 text-center">
+              <div className="text-[9px] text-blue-600 uppercase tracking-wider font-semibold mb-0.5">SAM (Reachable)</div>
+              <div className="text-base font-bold text-blue-800" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.sam}</div>
+              <div className="text-[9px] text-blue-500 mt-0.5">Serviceable available market</div>
             </div>
-            <div className="bg-emerald-50 rounded-lg p-3 text-center">
-              <div className="text-[10px] text-emerald-600 uppercase tracking-wider font-semibold mb-0.5">Growth</div>
-              <div className="text-lg font-bold text-emerald-700" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.growth_rate}</div>
+            <div className={`rounded-lg p-2.5 text-center ${startup.market_research.capture_potential === 'High' ? 'bg-emerald-50 ring-1 ring-emerald-300' : startup.market_research.capture_potential === 'Low' ? 'bg-red-50 ring-1 ring-red-200' : 'bg-amber-50 ring-1 ring-amber-200'}`}>
+              <div className={`text-[9px] uppercase tracking-wider font-semibold mb-0.5 ${startup.market_research.capture_potential === 'High' ? 'text-emerald-600' : startup.market_research.capture_potential === 'Low' ? 'text-red-600' : 'text-amber-600'}`}>SOM (Capturable)</div>
+              <div className={`text-base font-bold ${startup.market_research.capture_potential === 'High' ? 'text-emerald-700' : startup.market_research.capture_potential === 'Low' ? 'text-red-700' : 'text-amber-700'}`} style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.som}</div>
+              <div className={`text-[9px] mt-0.5 ${startup.market_research.capture_potential === 'High' ? 'text-emerald-500' : startup.market_research.capture_potential === 'Low' ? 'text-red-400' : 'text-amber-500'}`}>
+                Capture: {startup.market_research.capture_potential}
+              </div>
             </div>
-            <div className={`rounded-lg p-3 text-center ${startup.market_research.competition === 'Low' ? 'bg-emerald-50' : startup.market_research.competition === 'High' ? 'bg-red-50' : 'bg-amber-50'}`}>
-              <div className={`text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${startup.market_research.competition === 'Low' ? 'text-emerald-600' : startup.market_research.competition === 'High' ? 'text-red-600' : 'text-amber-600'}`}>Competition</div>
-              <div className={`text-lg font-bold ${startup.market_research.competition === 'Low' ? 'text-emerald-700' : startup.market_research.competition === 'High' ? 'text-red-700' : 'text-amber-700'}`}>{startup.market_research.competition}</div>
+          </div>
+
+          {/* Growth + Competition row */}
+          <div className="grid grid-cols-2 gap-2.5 mb-3">
+            <div className="bg-emerald-50 rounded-lg p-2.5 text-center">
+              <div className="text-[9px] text-emerald-600 uppercase tracking-wider font-semibold mb-0.5">Market Growth</div>
+              <div className="text-base font-bold text-emerald-700" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.growth_rate}</div>
             </div>
+            <div className={`rounded-lg p-2.5 text-center ${startup.market_research.competition === 'Low' ? 'bg-emerald-50' : startup.market_research.competition === 'High' ? 'bg-red-50' : 'bg-amber-50'}`}>
+              <div className={`text-[9px] uppercase tracking-wider font-semibold mb-0.5 ${startup.market_research.competition === 'Low' ? 'text-emerald-600' : startup.market_research.competition === 'High' ? 'text-red-600' : 'text-amber-600'}`}>Competition Level</div>
+              <div className={`text-base font-bold ${startup.market_research.competition === 'Low' ? 'text-emerald-700' : startup.market_research.competition === 'High' ? 'text-red-700' : 'text-amber-700'}`}>{startup.market_research.competition}</div>
+            </div>
+          </div>
+
+          {/* SOM Explanation — how much can this business capture */}
+          <div className="bg-gray-50 rounded-lg p-3 mb-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5">Can This Business Capture the Market?</div>
+            <p className="text-xs text-foreground/80 leading-relaxed">{startup.market_research.som_explanation}</p>
           </div>
 
           {/* Key Trends */}
