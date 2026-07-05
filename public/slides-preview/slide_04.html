@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, height=720">
+  <title>What is DealFlow AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    body { margin: 0; overflow: hidden; }
+    .slide { display: flex; flex-direction: column; }
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+    }
+    .feature-card {
+      background: #FFFFFF;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 28px 28px 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow 0.2s;
+    }
+    .feature-card:hover { box-shadow: 0 8px 30px rgba(15,23,42,0.08); }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--accent-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    .feature-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.3;
+    }
+    .feature-desc {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--gray-500);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+
+    <!-- Badge + Headline -->
+    <div style="margin-bottom: 12px;">
+      <span class="badge badge-blue">THE SOLUTION</span>
+    </div>
+    <h1 style="font-family: var(--font-heading); font-size: 34px; font-weight: 700; color: var(--primary); line-height: 1.2; margin-bottom: 6px;">
+      One Platform. Four Layers of Intelligence.
+    </h1>
+    <p style="font-family: var(--font-body); font-size: 16px; color: var(--gray-500); margin-bottom: 28px;">
+      Everything you need to evaluate startups — automated, transparent, and fast.
+    </p>
+
+    <!-- 2x2 Grid -->
+    <div class="grid-2x2">
+
+      <!-- Card 1: Startup Screening -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <span class="material-icons" style="font-size: 24px;">fact_check</span>
+        </div>
+        <div class="feature-title">Startup Screening</div>
+        <p class="feature-desc">AI-powered scoring with explainable decision trees. See exactly why each startup passes or fails.</p>
+      </div>
+
+      <!-- Card 2: Market Research -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <span class="material-icons" style="font-size: 24px;">insights</span>
+        </div>
+        <div class="feature-title">Market Research</div>
+        <p class="feature-desc">Industry size, growth rates, competitive landscape, and TAM analysis for every startup.</p>
+      </div>
+
+      <!-- Card 3: Macroeconomic Analysis -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <span class="material-icons" style="font-size: 24px;">trending_up</span>
+        </div>
+        <div class="feature-title">Macroeconomic Analysis</div>
+        <p class="feature-desc">GDP trends, inflation, foreign investment climate, and regional economic context.</p>
+      </div>
+
+      <!-- Card 4: Risk Assessment -->
+      <div class="feature-card">
+        <div class="feature-icon">
+          <span class="material-icons" style="font-size: 24px;">shield</span>
+        </div>
+        <div class="feature-title">Risk Assessment</div>
+        <p class="feature-desc">Regulatory, market, financial, and team risks — each scored and explained.</p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <aside data-notes class="hidden">
+    <ul style="list-style: disc; padding-left: 20px; font-size: 14px; line-height: 1.8;">
+      <li>DealFlow AI has grown beyond just screening — now four intelligence layers.</li>
+      <li>Philosophy stays the same: we present the data, you make the call.</li>
+      <li>Each layer is covered in detail in upcoming slides.</li>
+    </ul>
+  </aside>
+</body>
+</html>

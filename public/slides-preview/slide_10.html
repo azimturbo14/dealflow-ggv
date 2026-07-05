@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, height=720">
+  <title>Demo: Dashboard</title>
+  <link rel="stylesheet" href="global.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; }
+    .callout-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 22px 0;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .callout-item:last-child {
+      border-bottom: none;
+    }
+    .callout-num {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #2563EB;
+      line-height: 1;
+      min-width: 48px;
+    }
+    .callout-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 6px;
+    }
+    .callout-desc {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.6;
+    }
+    .screenshot-container {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.06);
+      border: 1px solid #E2E8F0;
+      background: #F8FAFC;
+    }
+    .screenshot-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide" style="padding: 60px 72px; display: flex; flex-direction: column;">
+
+    <!-- Headline -->
+    <h1 style="font-family: 'DM Sans', sans-serif; font-size: 36px; font-weight: 700; color: #0F172A; margin-bottom: 32px;">
+      The Dashboard
+    </h1>
+
+    <!-- Two-column layout -->
+    <div style="display: flex; gap: 48px; flex: 1; align-items: stretch;">
+
+      <!-- Left: Callout Points -->
+      <div style="width: 380px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center;">
+        <div class="callout-item">
+          <div class="callout-num">01</div>
+          <div>
+            <div class="callout-title">Instant Results</div>
+            <div class="callout-desc">50 startups evaluated in 3.2 seconds, ranked by score with color-coded badges (green/amber/red)</div>
+          </div>
+        </div>
+        <div class="callout-item">
+          <div class="callout-num">02</div>
+          <div>
+            <div class="callout-title">Smart Filtering</div>
+            <div class="callout-desc">Filter by potential level: High, Moderate, or Low. Search by name or industry.</div>
+          </div>
+        </div>
+        <div class="callout-item">
+          <div class="callout-num">03</div>
+          <div>
+            <div class="callout-title">One-Click Deep Dive</div>
+            <div class="callout-desc">Every row is a gateway to the full transparency report — screening, market research, macro data, and risks.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Screenshot -->
+      <div style="flex: 1; display: flex; align-items: center;">
+        <div class="screenshot-container" style="width: 100%; height: 520px;">
+          <img src="../mockup_dashboard.png" alt="DealFlow AI Dashboard Screenshot">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <aside data-notes class="hidden">
+    <p>• This is the live product — the dashboard is your starting point.</p>
+    <p>• 50 startups screened in 3.2 seconds with color-coded badges.</p>
+    <p>• One click from any row takes you into the full intelligence report.</p>
+  </aside>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280">
+  <title>The Transparency Engine — DealFlow AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; }
+    .trans-card { transition: box-shadow 0.2s; }
+    .trans-card:hover { box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08); }
+    .terminal-block {
+      font-family: 'DM Sans', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--green);
+      background: var(--primary);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 8px;
+    }
+    .mini-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide" style="display: flex; flex-direction: column;">
+
+    <!-- Headline -->
+    <h1 style="font-family: var(--font-heading); font-size: 36px; font-weight: 700; color: var(--primary); line-height: 1.2; margin-bottom: 6px;">
+      The Transparency Engine
+    </h1>
+    <p style="font-family: var(--font-body); font-size: 16px; color: var(--gray-500); margin-bottom: 36px; max-width: 640px; line-height: 1.5;">
+      Every piece of analysis is visible. No black boxes. You see the work.
+    </p>
+
+    <!-- 2x2 Bento Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; flex: 1; min-height: 0;">
+
+      <!-- Card 1: Decision Tree Path -->
+      <div class="trans-card card-accent" style="display: flex; flex-direction: column; gap: 10px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--accent);">account_tree</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Decision Tree Path</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 13.5px; color: var(--gray-600); line-height: 1.5; margin-bottom: 2px;">
+          See the exact branching logic — the full chain displayed in a terminal-style block.
+        </p>
+        <div class="terminal-block">
+          Previous exit? <span style="color: var(--green);">Yes</span> →<br>
+          Funding above $300K? <span style="color: var(--green);">Yes</span> →<br>
+          B2B? <span style="color: var(--green);">Yes</span> →<br>
+          <span style="color: #FFFFFF; font-weight: 700;">→ HIGH SCORE</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Strengths Identified -->
+      <div class="trans-card card-accent" style="display: flex; flex-direction: column; gap: 10px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--green);">check_circle</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Strengths Identified</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 13.5px; color: var(--gray-600); line-height: 1.55;">
+          The model highlights what's working — prior exit experience, strong B2B model, adequate funding.
+        </p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto;">
+          <span class="mini-badge" style="background: var(--green-light); color: var(--green);">
+            <span class="material-icons-outlined" style="font-size: 13px;">check</span> Prior Exit
+          </span>
+          <span class="mini-badge" style="background: var(--green-light); color: var(--green);">
+            <span class="material-icons-outlined" style="font-size: 13px;">check</span> B2B Model
+          </span>
+          <span class="mini-badge" style="background: var(--green-light); color: var(--green);">
+            <span class="material-icons-outlined" style="font-size: 13px;">check</span> Funded $300K+
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 3: Red Flags Detected -->
+      <div class="trans-card card-accent" style="display: flex; flex-direction: column; gap: 10px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--red);">warning</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Red Flags Detected</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 13.5px; color: var(--gray-600); line-height: 1.55;">
+          Risks flagged explicitly — low funding, B2C model in saturated market, slow time to first round.
+        </p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto;">
+          <span class="mini-badge" style="background: var(--red-light); color: var(--red);">
+            <span class="material-icons-outlined" style="font-size: 13px;">warning</span> Low Funding
+          </span>
+          <span class="mini-badge" style="background: var(--red-light); color: var(--red);">
+            <span class="material-icons-outlined" style="font-size: 13px;">warning</span> B2C Saturated
+          </span>
+          <span class="mini-badge" style="background: var(--red-light); color: var(--red);">
+            <span class="material-icons-outlined" style="font-size: 13px;">warning</span> Slow TTF
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 4: Full Research Report -->
+      <div class="trans-card card-accent" style="display: flex; flex-direction: column; gap: 10px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--accent);">description</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Full Research Report</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 13.5px; color: var(--gray-600); line-height: 1.55;">
+          Market context, macro conditions, risk narratives, and competitive analysis — all bundled into one transparency report. The complete picture, always visible.
+        </p>
+        <div style="display: flex; gap: 6px; margin-top: auto;">
+          <span class="mini-badge" style="background: var(--accent-light); color: var(--accent);">Screening</span>
+          <span class="mini-badge" style="background: var(--accent-light); color: var(--accent);">Market</span>
+          <span class="mini-badge" style="background: var(--accent-light); color: var(--accent);">Macro</span>
+          <span class="mini-badge" style="background: var(--accent-light); color: var(--accent);">Risks</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <aside data-notes class="hidden">
+    <ul>
+      <li>The Transparency Engine ties all four intelligence layers into one auditable report</li>
+      <li>Decision tree shows the exact branching logic — no hidden steps</li>
+      <li>Green cards for strengths, red cards for red flags — side by side</li>
+      <li>One-click access to the full picture: screening, market, macro, and risks</li>
+    </ul>
+  </aside>
+</body>
+</html>

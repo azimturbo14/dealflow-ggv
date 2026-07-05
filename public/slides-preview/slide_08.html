@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280">
+  <title>Comprehensive Risk Analysis — DealFlow AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; }
+    .risk-card { transition: box-shadow 0.2s; }
+    .risk-card:hover { box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08); }
+  </style>
+</head>
+<body>
+  <div class="slide" style="display: flex; flex-direction: column;">
+
+    <!-- Badge -->
+    <div style="margin-bottom: 16px;">
+      <span class="badge badge-blue">RISK INTELLIGENCE</span>
+    </div>
+
+    <!-- Headline -->
+    <h1 style="font-family: var(--font-heading); font-size: 36px; font-weight: 700; color: var(--primary); line-height: 1.2; margin-bottom: 6px;">
+      Every Risk, Identified and Explained
+    </h1>
+    <p style="font-family: var(--font-body); font-size: 16px; color: var(--gray-500); margin-bottom: 36px; max-width: 640px; line-height: 1.5;">
+      Not just a risk score — a full narrative of what could go wrong and why.
+    </p>
+
+    <!-- 2x2 Bento Grid with color accents -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; flex: 1; min-height: 0;">
+
+      <!-- Card 1: Regulatory Risk — RED accent -->
+      <div class="risk-card card-red-accent" style="display: flex; flex-direction: column; gap: 12px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--red);">gavel</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Regulatory Risk</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 14px; color: var(--gray-600); line-height: 1.55;">
+          Government policy changes, licensing requirements, compliance burdens, and regulatory uncertainty. Especially critical in fintech, healthtech, and edtech sectors operating in Central Asia.
+        </p>
+      </div>
+
+      <!-- Card 2: Market Risk — AMBER accent -->
+      <div class="risk-card card-amber-accent" style="display: flex; flex-direction: column; gap: 12px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--amber);">store</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Market Risk</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 14px; color: var(--gray-600); line-height: 1.55;">
+          Small TAM, slow adoption, strong incumbents, pricing pressure, and market timing. Is the market ready for this product? Is it big enough to matter?
+        </p>
+      </div>
+
+      <!-- Card 3: Financial Risk — RED accent -->
+      <div class="risk-card card-red-accent" style="display: flex; flex-direction: column; gap: 12px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--red);">attach_money</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Financial Risk</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 14px; color: var(--gray-600); line-height: 1.55;">
+          Burn rate concerns, insufficient runway, revenue model viability, and dependency on external funding. Can this startup survive until profitability or the next round?
+        </p>
+      </div>
+
+      <!-- Card 4: Team Risk — AMBER accent -->
+      <div class="risk-card card-amber-accent" style="display: flex; flex-direction: column; gap: 12px; padding: 28px; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 2px;">
+          <span class="material-icons-outlined" style="font-size: 28px; color: var(--amber);">people</span>
+          <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 700; color: var(--primary);">Team Risk</h2>
+        </div>
+        <p style="font-family: var(--font-body); font-size: 14px; color: var(--gray-600); line-height: 1.55;">
+          Small team, no domain expertise, founder dependency, and lack of technical depth. Is this team capable of executing their vision?
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <aside data-notes class="hidden">
+    <ul>
+      <li>We don't just flag risks — we explain them with industry and regional context</li>
+      <li>Red accent for high-severity risks: regulatory and financial</li>
+      <li>Amber accent for caution risks: market and team</li>
+      <li>Each risk category comes with context specific to the startup's industry</li>
+      <li>Investors understand not just WHAT the risks are, but WHY they matter</li>
+    </ul>
+  </aside>
+</body>
+</html>

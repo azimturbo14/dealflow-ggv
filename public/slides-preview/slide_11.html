@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, height=720">
+  <title>Demo: Transparency Report</title>
+  <link rel="stylesheet" href="global.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; }
+    .callout-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 0;
+    }
+    .callout-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #EFF6FF;
+    }
+    .callout-icon .material-icons {
+      font-size: 18px;
+      color: #2563EB;
+    }
+    .callout-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 3px;
+    }
+    .callout-desc {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.5;
+    }
+    .screenshot-container {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.06);
+      border: 1px solid #E2E8F0;
+      background: #F8FAFC;
+    }
+    .screenshot-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide" style="padding: 60px 72px; display: flex; flex-direction: column;">
+
+    <!-- Headline -->
+    <h1 style="font-family: 'DM Sans', sans-serif; font-size: 36px; font-weight: 700; color: #0F172A; margin-bottom: 28px;">
+      Full Intelligence Report
+    </h1>
+
+    <!-- Two-column: Screenshot left, Callouts right -->
+    <div style="display: flex; gap: 44px; flex: 1; align-items: stretch;">
+
+      <!-- Left: Screenshot -->
+      <div style="flex: 1; display: flex; align-items: center;">
+        <div class="screenshot-container" style="width: 100%; height: 520px;">
+          <img src="../mockup_transparency_expanded.png" alt="DealFlow AI Transparency Report Screenshot">
+        </div>
+      </div>
+
+      <!-- Right: 5 Callout Points -->
+      <div style="width: 370px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center;">
+
+        <div class="callout-item">
+          <div class="callout-icon">
+            <span class="material-icons">speed</span>
+          </div>
+          <div>
+            <div class="callout-title">Screening Score</div>
+            <div class="callout-desc">At-a-glance verdict: 95% HIGH POTENTIAL with color coding</div>
+          </div>
+        </div>
+
+        <div class="callout-item">
+          <div class="callout-icon">
+            <span class="material-icons">compare_arrows</span>
+          </div>
+          <div>
+            <div class="callout-title">Strengths & Red Flags</div>
+            <div class="callout-desc">Side-by-side green and red cards</div>
+          </div>
+        </div>
+
+        <div class="callout-item">
+          <div class="callout-icon">
+            <span class="material-icons">account_tree</span>
+          </div>
+          <div>
+            <div class="callout-title">Decision Tree Logic</div>
+            <div class="callout-desc">The exact path the model followed</div>
+          </div>
+        </div>
+
+        <div class="callout-item">
+          <div class="callout-icon">
+            <span class="material-icons">public</span>
+          </div>
+          <div>
+            <div class="callout-title">Market & Macro Context</div>
+            <div class="callout-desc">Industry size, GDP trends, FDI data, competitive landscape</div>
+          </div>
+        </div>
+
+        <div class="callout-item">
+          <div class="callout-icon">
+            <span class="material-icons">shield</span>
+          </div>
+          <div>
+            <div class="callout-title">Risk Narratives</div>
+            <div class="callout-desc">Written paragraphs with industry context and specific risk factors</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <aside data-notes class="hidden">
+    <p>• This is the complete picture — one click from the dashboard.</p>
+    <p>• You see the score, the reasoning, the market context, the macro environment, and every risk.</p>
+    <p>• This is what 'informed decisions' looks like.</p>
+  </aside>
+</body>
+</html>

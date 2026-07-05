@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, height=720">
+  <title>DealFlow AI — Cover</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    body { margin: 0; overflow: hidden; }
+    .slide { display: flex; flex-direction: column; justify-content: center; position: relative; }
+    .glow-blob {
+      position: absolute;
+      bottom: 0;
+      right: -40px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(37,99,235,0.25) 0%, rgba(37,99,235,0.08) 40%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide slide-dark">
+    <div class="glow-blob" data-decor aria-hidden="true"></div>
+
+    <!-- Badge -->
+    <div style="margin-bottom: 32px;">
+      <span class="badge badge-blue" style="font-size: 13px; padding: 6px 16px;">Product Demo 2025</span>
+    </div>
+
+    <!-- Headline -->
+    <h1 style="font-family: var(--font-heading); font-size: 80px; font-weight: 700; color: #FFFFFF; line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 24px;">
+      DealFlow AI
+    </h1>
+
+    <!-- Subheading -->
+    <p style="font-family: var(--font-heading); font-size: 28px; font-weight: 500; color: #E2E8F0; line-height: 1.4; margin-bottom: 16px; max-width: 680px;">
+      We Don't Decide For You.<br>We Make Your Decisions Better.
+    </p>
+
+    <!-- Accent line -->
+    <div style="width: 64px; height: 4px; background: var(--accent); border-radius: 2px; margin-bottom: 20px;"></div>
+
+    <!-- Tagline -->
+    <p style="font-family: var(--font-body); font-size: 18px; color: var(--gray-400); max-width: 540px; line-height: 1.6;">
+      Research. Screening. Market Intelligence. All transparent.
+    </p>
+  </div>
+
+  <aside data-notes class="hidden">
+    <ul style="list-style: disc; padding-left: 20px; font-size: 14px; line-height: 1.8;">
+      <li>DealFlow AI does NOT make investment decisions for you — it does the heavy lifting so YOU decide.</li>
+      <li>Research, screening, market analysis — all automated and transparent.</li>
+      <li>Set the tone: this is about empowering investors, not replacing judgment.</li>
+    </ul>
+  </aside>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DealFlow AI — Slide Preview</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #0F172A; color: #E2E8F0; min-height: 100vh; }
+.header { padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; font-weight: 600; }
+.header span { font-size: 13px; color: #94A3B8; }
+.controls { padding: 16px 32px; display: flex; gap: 12px; align-items: center; }
+.btn { background: #2563EB; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
+.btn:disabled { background: #334155; cursor: not-allowed; }
+.btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #E2E8F0; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.frame { padding: 0 32px 32px; }
+iframe { width: 100%; height: calc(100vh - 140px); border: none; border-radius: 12px; background: white; }
+.slide-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.slide-dot { width: 10px; height: 10px; border-radius: 50%; background: #334155; border: none; cursor: pointer; padding: 0; }
+.slide-dot.active { background: #2563EB; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>DealFlow AI — Pitch Deck Preview</h1>
+  <span id="counter">1 / 13</span>
+</div>
+<div class="controls">
+  <button class="btn-outline" onclick="go(-1)" id="prevBtn">&#8592; Previous</button>
+  <div class="slide-nav" id="dots"></div>
+  <button class="btn" onclick="go(1)" id="nextBtn">Next &#8594;</button>
+</div>
+<div class="frame">
+  <iframe id="frame" src="slide_01.html"></iframe>
+</div>
+<script>
+const slides = ['slide_01.html','slide_02.html','slide_03.html','slide_04.html','slide_05.html','slide_06.html','slide_07.html','slide_08.html','slide_09.html','slide_10.html','slide_11.html','slide_12.html','slide_13.html'];
+let cur = 0;
+const frame = document.getElementById('frame');
+const counter = document.getElementById('counter');
+const dots = document.getElementById('dots');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+slides.forEach((_, i) => {
+  const d = document.createElement('button');
+  d.className = 'slide-dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dots.appendChild(d);
+});
+function update() {
+  frame.src = slides[cur];
+  counter.textContent = (cur+1) + ' / ' + slides.length;
+  prevBtn.disabled = cur === 0;
+  nextBtn.disabled = cur === slides.length - 1;
+  dots.querySelectorAll('.slide-dot').forEach((d,i) => d.className = 'slide-dot' + (i===cur?' active':''));
+}
+function go(d) { cur = Math.max(0, Math.min(slides.length-1, cur+d)); update(); }
+function goTo(i) { cur = i; update(); }
+document.addEventListener('keydown', e => { if(e.key==='ArrowRight') go(1); if(e.key==='ArrowLeft') go(-1); });
+</script>
+</body>
+</html>
