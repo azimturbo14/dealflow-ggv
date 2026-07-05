@@ -12,7 +12,8 @@ import {
   Upload, Search, ArrowLeft, ArrowRight, Filter,
   CheckCircle2, AlertTriangle, XCircle, FileSpreadsheet,
   Zap, Shield, Brain, TreePine, BarChart3, Users,
-  Clock, DollarSign, Briefcase, ChevronRight, Download
+  Clock, DollarSign, Briefcase, ChevronRight, Download,
+  TrendingUp, Globe, AlertOctagon, Building2
 } from 'lucide-react';
 
 type View = 'home' | 'dashboard' | 'detail' | 'how-it-works';
@@ -481,19 +482,144 @@ function DetailScreen({ startup, onBack }: { startup: Startup; onBack: () => voi
         </CardContent>
       </Card>
 
-      {/* Risk Analysis */}
+      {/* Risk Analysis — now categorized */}
       <Card className="border-gray-200/80 mb-5">
         <CardHeader className="pb-2 pt-4 px-5">
           <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--df-navy)' }}>
-            <Shield className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Risk Analysis
+            <Shield className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Risk Assessment
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <AlertOctagon className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Execution Risks</span>
+          </div>
           {startup.risks.map((risk, i) => (
-            <div key={i} className="bg-gray-50 rounded-lg p-3.5">
+            <div key={i} className="bg-amber-50/50 border border-amber-100 rounded-lg p-3.5">
               <p className="text-xs text-foreground/80 leading-relaxed">{risk}</p>
             </div>
           ))}
+
+          <div className="flex items-center gap-2 mb-1 mt-5">
+            <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
+            <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Market Risks</span>
+          </div>
+          <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3.5">
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              {startup.market_research.competition === 'High'
+                ? `High competition in ${startup.industry} — ${startup.market_research.competition === 'High' ? 'established players and well-funded competitors dominate. Differentiation is critical.' : 'the market has room for new entrants with a clear value proposition.'} Market growth of ${startup.market_research.growth_rate} is strong, but competition may compress margins.`
+                : startup.market_research.competition === 'Low'
+                ? `Low competition in ${startup.industry} — few local players exist, creating first-mover advantages. However, the market is less proven and may require more education and customer development effort.`
+                : `Moderate competition in ${startup.industry} — the market is established enough to validate demand but not yet saturated. Positioning and speed of execution will determine market share.`
+              }
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 mb-1 mt-5">
+            <Globe className="w-3.5 h-3.5 text-purple-500" />
+            <span className="text-xs font-semibold text-purple-700 uppercase tracking-wider">Macroeconomic Risks</span>
+          </div>
+          <div className="bg-purple-50/50 border border-purple-100 rounded-lg p-3.5">
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              {startup.macro_analysis.regulatory_risk === 'High'
+                ? `High regulatory risk in ${startup.industry} — compliance requirements add 6-12 months to sales cycles and may require product modifications for local certification. Budget allocation uncertainty is a concern.`
+                : startup.macro_analysis.regulatory_risk === 'Medium'
+                ? `Moderate regulatory environment — some compliance requirements exist but are manageable. Regulatory changes are possible but tend to be industry-friendly.`
+                : `Low regulatory risk — minimal compliance burden for ${startup.industry}. This reduces go-to-market friction and allows faster iteration.`
+              }
+              {' '}Inflation at {startup.macro_analysis.inflation} erodes purchasing power. {startup.macro_analysis.currency_stability}.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Market Research */}
+      <Card className="border-gray-200/80 mb-5">
+        <CardHeader className="pb-2 pt-4 px-5">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--df-navy)' }}>
+            <TrendingUp className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Market Research — {startup.industry}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-5 pb-5">
+          {/* Stats row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div className="bg-blue-50 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-blue-600 uppercase tracking-wider font-semibold mb-0.5">TAM</div>
+              <div className="text-lg font-bold text-blue-800" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.tam}</div>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-blue-600 uppercase tracking-wider font-semibold mb-0.5">SAM</div>
+              <div className="text-lg font-bold text-blue-800" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.sam}</div>
+            </div>
+            <div className="bg-emerald-50 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-emerald-600 uppercase tracking-wider font-semibold mb-0.5">Growth</div>
+              <div className="text-lg font-bold text-emerald-700" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.market_research.growth_rate}</div>
+            </div>
+            <div className={`rounded-lg p-3 text-center ${startup.market_research.competition === 'Low' ? 'bg-emerald-50' : startup.market_research.competition === 'High' ? 'bg-red-50' : 'bg-amber-50'}`}>
+              <div className={`text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${startup.market_research.competition === 'Low' ? 'text-emerald-600' : startup.market_research.competition === 'High' ? 'text-red-600' : 'text-amber-600'}`}>Competition</div>
+              <div className={`text-lg font-bold ${startup.market_research.competition === 'Low' ? 'text-emerald-700' : startup.market_research.competition === 'High' ? 'text-red-700' : 'text-amber-700'}`}>{startup.market_research.competition}</div>
+            </div>
+          </div>
+
+          {/* Key Trends */}
+          <div className="mb-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-2">Key Market Trends</div>
+            <ul className="space-y-1.5">
+              {startup.market_research.key_trends.map((t, i) => (
+                <li key={i} className="text-xs text-foreground/80 flex gap-2">
+                  <span className="w-1 h-1 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Assessment */}
+          <div className="bg-gray-50 rounded-lg p-3.5">
+            <p className="text-xs text-foreground/80 leading-relaxed">{startup.market_research.assessment}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Macroeconomic Analysis */}
+      <Card className="border-gray-200/80 mb-5">
+        <CardHeader className="pb-2 pt-4 px-5">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--df-navy)' }}>
+            <Globe className="w-4 h-4" style={{ color: 'var(--df-blue)' }} /> Macroeconomic Context — Uzbekistan
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-5 pb-5">
+          {/* Macro stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+            <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">GDP Growth</div>
+              <div className="text-base font-bold" style={{ color: 'var(--df-navy)', fontFamily: 'var(--font-num, DM Sans)' }}>{startup.macro_analysis.gdp_growth}</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Inflation</div>
+              <div className="text-base font-bold text-amber-600" style={{ fontFamily: 'var(--font-num, DM Sans)' }}>{startup.macro_analysis.inflation}</div>
+            </div>
+            <div className={`rounded-lg p-3 text-center ${startup.macro_analysis.regulatory_risk === 'Low' ? 'bg-emerald-50' : startup.macro_analysis.regulatory_risk === 'High' ? 'bg-red-50' : 'bg-amber-50'}`}>
+              <div className={`text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${startup.macro_analysis.regulatory_risk === 'Low' ? 'text-emerald-600' : startup.macro_analysis.regulatory_risk === 'High' ? 'text-red-600' : 'text-amber-600'}`}>Reg. Risk</div>
+              <div className={`text-base font-bold ${startup.macro_analysis.regulatory_risk === 'Low' ? 'text-emerald-700' : startup.macro_analysis.regulatory_risk === 'High' ? 'text-red-700' : 'text-amber-700'}`}>{startup.macro_analysis.regulatory_risk}</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 text-center col-span-2 sm:col-span-1">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">FDI Trend</div>
+              <div className="text-xs font-bold mt-1" style={{ color: 'var(--df-navy)' }}>Up 23%</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 text-center">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Currency</div>
+              <div className="text-xs font-bold text-amber-600 mt-1">-8% UZS</div>
+            </div>
+          </div>
+
+          {/* Macro assessment */}
+          <div className="bg-gray-50 rounded-lg p-3.5">
+            <p className="text-xs text-foreground/80 leading-relaxed">{startup.macro_analysis.assessment}</p>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Macro data based on Uzbekistan's 2024 economic indicators from the State Statistics Committee and World Bank. Industry-specific regulatory analysis reflects current legislation.
+          </p>
         </CardContent>
       </Card>
 

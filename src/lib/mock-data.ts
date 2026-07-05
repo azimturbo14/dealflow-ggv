@@ -1,3 +1,21 @@
+export interface MarketResearch {
+  tam: string;
+  sam: string;
+  growth_rate: string;
+  competition: 'Low' | 'Moderate' | 'High';
+  key_trends: string[];
+  assessment: string;
+}
+
+export interface MacroAnalysis {
+  gdp_growth: string;
+  inflation: string;
+  regulatory_risk: 'Low' | 'Medium' | 'High';
+  foreign_investment_trend: string;
+  currency_stability: string;
+  assessment: string;
+}
+
 export interface Startup {
   id: number;
   name: string;
@@ -19,6 +37,8 @@ export interface Startup {
   red_flags: string[];
   decision_path: string[];
   risks: string[];
+  market_research: MarketResearch;
+  macro_analysis: MacroAnalysis;
   score_breakdown: ScoreFactor[];
 }
 
@@ -307,6 +327,34 @@ function generateStartups(): Startup[] {
       risks.push("No significant structural risks identified. The startup shows strong fundamentals across team, funding, and market positioning.");
     }
 
+    // Market Research
+    const md: Record<string, MarketResearch> = {
+      SaaS: { tam: '$12.4B', sam: '$890M', growth_rate: '22.3% CAGR', competition: 'High', key_trends: ['Cloud adoption accelerating across Uzbekistan enterprises', 'Government digitalization mandate driving B2B SaaS demand', 'Low local SaaS saturation — first-mover advantages'], assessment: `The Central Asian SaaS market is in early growth. Uzbekistan's government is pushing digital transformation across ministries and SOEs, creating forced demand for B2B software. Enterprise cloud penetration is only 8-12% vs 35-45% in developed markets. This gap is the opportunity and the risk — the market exists but requires education and adaptation to local practices.` },
+      Fintech: { tam: '$8.7B', sam: '$1.2B', growth_rate: '28.1% CAGR', competition: 'High', key_trends: ['Central bank licensing 15+ new digital banks by 2026', 'Mobile banking penetration jumped from 18% to 42% in 2 years', 'Cross-border payments remain a major SME pain point'], assessment: `Uzbekistan's fintech is the most active sector in Central Asia. Regulatory sandboxes and fast-tracked licenses help, but 40+ fintech startups compete for 36M people. Success requires a specific niche — generic plays struggle against Uzum ($150M+ raised) and Payme.` },
+      EdTech: { tam: '$5.2B', sam: '$340M', growth_rate: '19.7% CAGR', competition: 'Moderate', key_trends: ['Government investing $200M in digital education infrastructure', 'STEM demand growing 25% year-over-year', 'Corporate training market underpenetrated by technology'], assessment: `EdTech benefits from strong government support — $200M committed to digitize 80% of schools by 2027. But B2C is price-sensitive ($15-30/year household spend on EdTech). B2B (corporate training, school management) has significantly better unit economics.` },
+      AgriTech: { tam: '$3.8B', sam: '$520M', growth_rate: '15.4% CAGR', competition: 'Low', key_trends: ['Agriculture employs 27% of workforce but only 3% use tech', 'Government subsidies for precision agriculture', 'Export-oriented horticulture driving supply chain demand'], assessment: `Agriculture is Uzbekistan's #2 sector, yet only 3% of farms use digital tools — massive greenfield opportunity. The biggest challenge is last-mile distribution to rural areas with limited internet and low digital literacy.` },
+      HealthTech: { tam: '$6.1B', sam: '$280M', growth_rate: '24.8% CAGR', competition: 'Moderate', key_trends: ['Telemedicine legalized and insurance expanded in 2024', 'Medical data digitization mandate for all clinics by 2026', 'Shortage of 12,000 doctors driving AI diagnostics demand'], assessment: `Healthcare is modernizing fast — EHR mandate by 2026, telemedicine insurance coverage expanded. Doctor-to-patient ratio is 1:1,200 (3x worse than WHO recommends). Procurement cycles are slow (12-18 months) and medical software regulations are stringent.` },
+      'E-commerce': { tam: '$9.3B', sam: '$1.8B', growth_rate: '31.2% CAGR', competition: 'High', key_trends: ['E-commerce grew 65% in 2024 — fastest in Central Asia', 'Uzum Mall and olcha.uz dominate but verticals still open', '$500M in new warehouse investments improving logistics'], assessment: `65% growth in 2024, but Uzum Mall and olcha.uz control ~70% of the market. New entrants need specific vertical niches. Last-mile delivery outside Tashkent costs 2-3x more than in the capital.` },
+      LogTech: { tam: '$4.2B', sam: '$380M', growth_rate: '17.6% CAGR', competition: 'Low', key_trends: ['Cross-border trade with China/Kazakhstan growing 20% annually', 'Only 15% of logistics companies use route optimization', '14 special economic zones driving warehousing demand'], assessment: `Uzbekistan is a natural logistics hub between China, Kazakhstan, and Afghanistan. 14 SEZs with simplified customs. Only 15% of logistics firms use optimization software. Sales cycles are long (6-12 months) and customers are price-sensitive.` },
+      CyberSec: { tam: '$2.8B', sam: '$190M', growth_rate: '26.3% CAGR', competition: 'Low', key_trends: ['Mandatory cybersecurity audits for financial institutions since 2024', 'Zero local enterprise-grade vendors — all imports', 'Government building national SOC'], assessment: `New regulations force financial institutions into annual audits, creating demand. Nearly all solutions are imported (mostly Russian), opening space for local vendors. The challenge: most enterprises don't prioritize cybersecurity until after a breach.` },
+      'AI/ML': { tam: '$7.5B', sam: '$410M', growth_rate: '34.2% CAGR', competition: 'Moderate', key_trends: ['Government AI strategy with $100M allocation', 'Uzbek language NLP severely underdeveloped', '3,000+ CS graduates/year from local universities'], assessment: `Fastest-growing sector with $100M government AI fund. The unique opportunity is Uzbek-language NLP for 35M speakers. However, most local AI startups are pre-revenue and rely on consulting/grants.` },
+      GovTech: { tam: '$3.1B', sam: '$450M', growth_rate: '20.8% CAGR', competition: 'Moderate', key_trends: ['E-government processing 50M+ transactions/year', 'Smart City Tashkent with $300M budget', 'Open data portals enabling civic tech'], assessment: `Government is an active buyer — 50M+ e-gov transactions/year, $300M Smart City budget. But sales cycles are 12-24 months, payments can be delayed, and over-reliance on a single government client is a key risk.` },
+    };
+    const defaultMarket: MarketResearch = { tam: '$4.5B', sam: '$310M', growth_rate: '18.5% CAGR', competition: 'Moderate', key_trends: ['Digital adoption accelerating across all sectors', 'Local talent pool growing with expanding CS programs', 'Regional market underserved by global platforms'], assessment: `The Central Asian tech market is in early growth with significant untapped potential. Local startups understand regional business practices, regulations, and language better than global platforms. The key challenge is building sustainable revenue in a price-sensitive market.` };
+    const market_research = md[industry] || defaultMarket;
+
+    // Macroeconomic Analysis
+    const mi: Record<string, MacroAnalysis> = {
+      Fintech: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Medium', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Fintech regulation is evolving rapidly — 12 regulatory updates in 2024 alone. This creates barriers to entry (positive for incumbents) but uncertainty for startups. 9.8% inflation impacts lending economics. Currency depreciation creates cross-border payment complexities but also demand for local fintech solutions.` },
+      HealthTech: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'High', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Medical software must comply with Ministry of Health certification and data localization (patient data on Uzbek servers). Budget allocations prioritize infrastructure over technology. Healthcare receives a small share of the $2.8B FDI inflow.` },
+      CyberSec: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'High', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `New laws require 24-hour incident reporting and certified security products — 6-12 month approval process creates a moat but also a barrier. Most budgets go to hardware (firewalls) not software platforms.` },
+      'AI/ML': { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Low', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `No specific AI laws — low barriers but no protection from global competition. 5.5% GDP growth and 3,000+ CS graduates/year are strong tailwinds. 9.8% inflation drives demand for cost-saving automation.` },
+      'E-commerce': { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Medium', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Import duties (15-30%) make cross-border expensive, benefiting local platforms. Young demographic (median age 29) is a tailwind. But 9.8% inflation directly reduces discretionary spending and e-commerce order volumes.` },
+      GovTech: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'High', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Government procurement involves complex bureaucracy, mandatory tenders, and 60-90 day payment terms. Data localization requires servers in Uzbekistan. The positive: dedicated budget for digital transformation with specific allocations.` },
+    };
+    const defaultMacro: MacroAnalysis = { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Medium', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Uzbekistan's 5.5% GDP growth is among the highest in the CIS, driven by liberalization, privatization, and growing FDI. Key risks: 9.8% inflation (above 8% target), 8% currency depreciation, and evolving regulation. For ${industry.toLowerCase()}, the most relevant factor is the government's digital transformation commitment.` };
+    const macro_analysis = mi[industry] || defaultMacro;
+
     startups.push({
       id: i + 1,
       name: startupNames[i] || `Startup ${i + 1}`,
@@ -328,6 +376,8 @@ function generateStartups(): Startup[] {
       red_flags,
       decision_path,
       risks,
+      market_research,
+      macro_analysis,
       score_breakdown,
     });
   }
