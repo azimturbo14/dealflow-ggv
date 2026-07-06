@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { mockStartups, type Startup } from '@/lib/mock-data';
+import { mockStartups, evaluateStartup, industries, type Startup } from '@/lib/mock-data';
 import {
   LayoutDashboard, Rows3, BookOpen, Search, ChevronRight, ChevronDown,
   Download, Play, ArrowLeft, ArrowUpRight, CircleCheck, TriangleAlert, CircleX,
+  Plus, X, Upload, FileDown,
 } from 'lucide-react';
 
 type View = 'overview' | 'apps' | 'methodology';
@@ -20,12 +21,13 @@ const fmtMoney = (v: number) =>
   v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : v > 0 ? `$${(v / 1000).toFixed(0)}K` : '—';
 const fmtMoney0 = (v: number) => (v > 0 ? fmtMoney(v) : '$0');
 
-const counts = {
-  all: mockStartups.length,
-  high: mockStartups.filter((s) => s.verdict === 'high').length,
-  moderate: mockStartups.filter((s) => s.verdict === 'moderate').length,
-  low: mockStartups.filter((s) => s.verdict === 'low').length,
-};
+type Counts = { all: number; high: number; moderate: number; low: number };
+const countVerdicts = (data: Startup[]): Counts => ({
+  all: data.length,
+  high: data.filter((s) => s.verdict === 'high').length,
+  moderate: data.filter((s) => s.verdict === 'moderate').length,
+  low: data.filter((s) => s.verdict === 'low').length,
+});
 
 /* ---------- shared primitives ---------- */
 
@@ -104,27 +106,31 @@ function exportCsv(data: Startup[]) {
 
 /* ========== OVERVIEW ========== */
 
-function OverviewView({ onOpenStartup }: { onOpenStartup: (id: number) => void }) {
-  const avgScore = Math.round(mockStartups.reduce((a, s) => a + s.score, 0) / mockStartups.length);
-  const b2bShare = Math.round((mockStartups.filter((s) => s.is_b2b).length / mockStartups.length) * 100);
+function OverviewView({ data, counts, onOpenStartup }: {
+  data: Startup[];
+  counts: Counts;
+  onOpenStartup: (id: number) => void;
+}) {
+  const avgScore = Math.round(data.reduce((a, s) => a + s.score, 0) / data.length);
+  const b2bShare = Math.round((data.filter((s) => s.is_b2b).length / data.length) * 100);
 
   const buckets = useMemo(() => {
     const b = Array.from({ length: 10 }, () => 0);
-    mockStartups.forEach((s) => b[Math.min(9, Math.floor(s.score / 10))]++);
+    data.forEach((s) => b[Math.min(9, Math.floor(s.score / 10))]++);
     return b;
-  }, []);
+  }, [data]);
   const maxBucket = Math.max(...buckets);
 
   const sectors = useMemo(() => {
     const m = new Map<string, number>();
-    mockStartups.forEach((s) => m.set(s.industry, (m.get(s.industry) || 0) + 1));
+    data.forEach((s) => m.set(s.industry, (m.get(s.industry) || 0) + 1));
     return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
-  }, []);
+  }, [data]);
   const maxSector = sectors.length ? sectors[0][1] : 1;
 
   const topRanked = useMemo(
-    () => [...mockStartups].sort((a, b) => b.score - a.score).slice(0, 5),
-    []
+    () => [...data].sort((a, b) => b.score - a.score).slice(0, 5),
+    [data]
   );
 
   return (
@@ -137,7 +143,7 @@ function OverviewView({ onOpenStartup }: { onOpenStartup: (id: number) => void }
           </p>
         </div>
         <button
-          onClick={() => exportCsv(mockStartups)}
+          onClick={() => exportCsv(data)}
           className="inline-flex items-center gap-2 text-[13px] font-medium text-ink-2 bg-pane border border-line rounded-lg px-3.5 py-2 hover:bg-tint transition-colors"
         >
           <Download className="w-3.5 h-3.5" /> Export CSV
@@ -249,8 +255,10 @@ function OverviewView({ onOpenStartup }: { onOpenStartup: (id: number) => void }
 /* ========== APPLICATIONS: LIST + DETAIL ========== */
 
 function AppsView({
-  filter, setFilter, selectedId, setSelectedId,
+  data, counts, filter, setFilter, selectedId, setSelectedId,
 }: {
+  data: Startup[];
+  counts: Counts;
   filter: Filter;
   setFilter: (f: Filter) => void;
   selectedId: number | null;
@@ -260,18 +268,18 @@ function AppsView({
   const [mobileDetail, setMobileDetail] = useState(selectedId !== null);
 
   const filtered = useMemo(() => {
-    let data = mockStartups;
-    if (filter !== 'all') data = data.filter((s) => s.verdict === filter);
+    let d = data;
+    if (filter !== 'all') d = d.filter((s) => s.verdict === filter);
     if (search)
-      data = data.filter(
+      d = d.filter(
         (s) =>
           s.name.toLowerCase().includes(search.toLowerCase()) ||
           s.industry.toLowerCase().includes(search.toLowerCase())
       );
-    return [...data].sort((a, b) => b.score - a.score);
-  }, [filter, search]);
+    return [...d].sort((a, b) => b.score - a.score);
+  }, [data, filter, search]);
 
-  const selected = mockStartups.find((s) => s.id === selectedId) ?? filtered[0] ?? null;
+  const selected = data.find((s) => s.id === selectedId) ?? filtered[0] ?? null;
 
   useEffect(() => {
     if (filtered.length > 0 && !filtered.some((s) => s.id === selectedId)) {
@@ -346,14 +354,20 @@ function AppsView({
             return (
               <button
                 key={s.id}
+                ref={active ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
                 onClick={() => { setSelectedId(s.id); setMobileDetail(true); }}
                 className={`w-full text-left px-3.5 py-3 border-b border-line/70 transition-colors ${
                   active ? 'bg-accent-soft' : 'hover:bg-tint/50'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-[13px] font-medium truncate ${active ? 'text-accent-deep' : 'text-ink'}`}>
-                    {s.name}
+                  <span className={`inline-flex items-center gap-1.5 min-w-0 text-[13px] font-medium ${active ? 'text-accent-deep' : 'text-ink'}`}>
+                    <span className="truncate">{s.name}</span>
+                    {s.id >= 1000 && (
+                      <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-accent-deep bg-accent-soft border border-accent/20 rounded px-1 py-px">
+                        New
+                      </span>
+                    )}
                   </span>
                   <span className="font-mono text-[13px] font-semibold shrink-0">{s.score}</span>
                 </div>
@@ -790,6 +804,278 @@ function MethodologyView() {
   );
 }
 
+/* ========== NEW EVALUATION MODAL ========== */
+
+function parseCsvText(text: string, startId: number): Startup[] {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) throw new Error('The CSV needs a header row and at least one data row.');
+  const header = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/\s+/g, '_'));
+  const idx = (names: string[]) => header.findIndex((h) => names.includes(h));
+  const iName = idx(['name', 'company', 'startup']);
+  const iInd = idx(['industry', 'sector']);
+  const iModel = idx(['business_model', 'model', 'b2b']);
+  const iTeam = idx(['team_size', 'team']);
+  const iFund = idx(['funding_total_usd', 'total_funding', 'funding']);
+  const iRounds = idx(['funding_rounds', 'rounds']);
+  const iTime = idx(['time_to_first_funding_months', 'months_to_funding', 'time_to_funding']);
+  const iExit = idx(['has_previous_exit', 'previous_exit', 'exit']);
+  const iRev = idx(['sales_amount_usd', 'revenue', 'sales']);
+  if (iName < 0) throw new Error('The CSV must include a "name" column — download the template for the expected format.');
+  const yes = (v: string) => ['yes', 'true', '1', 'b2b', 'y'].includes(v.trim().toLowerCase());
+  const num = (v: string) => Math.max(0, Number(v.replace(/[^0-9.]/g, '')) || 0);
+  const cell = (cols: string[], i: number) => (i >= 0 && i < cols.length ? cols[i] : '');
+  return lines.slice(1, 201).map((line, n) => {
+    const cols = line.split(',');
+    return evaluateStartup(
+      {
+        name: cell(cols, iName).trim() || `Imported ${n + 1}`,
+        industry: cell(cols, iInd).trim() || 'SaaS',
+        is_b2b: iModel >= 0 ? yes(cell(cols, iModel)) : true,
+        team_size: Math.max(1, num(cell(cols, iTeam)) || 1),
+        funding_total_usd: num(cell(cols, iFund)),
+        funding_rounds: num(cell(cols, iRounds)),
+        time_to_first_funding_months: num(cell(cols, iTime)),
+        has_previous_exit: yes(cell(cols, iExit)),
+        sales_amount_usd: num(cell(cols, iRev)),
+      },
+      startId + n
+    );
+  });
+}
+
+function downloadCsvTemplate() {
+  const csv = [
+    'name,industry,business_model,team_size,funding_total_usd,funding_rounds,time_to_first_funding_months,has_previous_exit,sales_amount_usd',
+    'Acme Robotics,SaaS,B2B,8,450000,2,7,no,25000',
+  ].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'dealflow-application-template.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function Segmented({ value, options, onChange }: {
+  value: string;
+  options: { key: string; label: string }[];
+  onChange: (key: string) => void;
+}) {
+  return (
+    <div className="flex bg-canvas border border-line rounded-lg p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onChange(o.key)}
+          className={`flex-1 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors ${
+            value === o.key ? 'bg-pane text-ink border border-line' : 'text-ink-3 hover:text-ink'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function EvaluateModal({ open, onClose, onCreate, nextId }: {
+  open: boolean;
+  onClose: () => void;
+  onCreate: (created: Startup[]) => void;
+  nextId: number;
+}) {
+  const [tab, setTab] = useState<'form' | 'csv'>('form');
+  const [evaluating, setEvaluating] = useState(false);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: '', founder_name: '', industry: industries[0], is_b2b: true,
+    team_size: 5, funding_total_usd: 0, funding_rounds: 0,
+    time_to_first_funding_months: 0, has_previous_exit: false, sales_amount_usd: 0,
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const num = (v: string) => Math.max(0, Math.round(Number(v) || 0));
+  const inputCls =
+    'w-full bg-canvas border border-line rounded-lg px-3 py-2 text-[13px] placeholder:text-ink-3 focus:outline-none focus:border-accent transition-colors';
+
+  const submit = () => {
+    if (!form.name.trim() || evaluating) return;
+    setEvaluating(true);
+    setTimeout(() => {
+      const s = evaluateStartup(
+        {
+          ...form,
+          name: form.name.trim(),
+          founder_name: form.founder_name.trim() || undefined,
+          description: `${form.is_b2b ? 'B2B' : 'B2C'} ${form.industry.toLowerCase()} startup — submitted via manual entry`,
+        },
+        nextId
+      );
+      setEvaluating(false);
+      onCreate([s]);
+    }, 900);
+  };
+
+  const handleFile = (file: File | undefined | null) => {
+    if (!file) return;
+    setCsvError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const created = parseCsvText(String(reader.result || ''), nextId);
+        onCreate(created);
+      } catch (e) {
+        setCsvError(e instanceof Error ? e.message : 'Could not parse that file.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-ink/40" onClick={onClose} />
+      <div className="relative bg-pane border border-line rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-5 pt-4">
+          <h2 className="text-[15px] font-semibold">New evaluation</h2>
+          <button onClick={onClose} aria-label="Close" className="text-ink-3 hover:text-ink p-1">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="flex gap-1 px-5 pt-3 border-b border-line">
+          {([['form', 'Single company'], ['csv', 'CSV batch']] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-3 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
+                tab === key ? 'border-accent text-accent-deep' : 'border-transparent text-ink-3 hover:text-ink'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'form' ? (
+          <form
+            className="p-5 space-y-4"
+            onSubmit={(e) => { e.preventDefault(); submit(); }}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="ev-name" className="microlabel block mb-1.5">Company name *</label>
+                <input id="ev-name" className={inputCls} placeholder="Acme Robotics" value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
+              </div>
+              <div>
+                <label htmlFor="ev-founder" className="microlabel block mb-1.5">Founder (optional)</label>
+                <input id="ev-founder" className={inputCls} placeholder="Full name" value={form.founder_name}
+                  onChange={(e) => setForm((f) => ({ ...f, founder_name: e.target.value }))} />
+              </div>
+              <div>
+                <label htmlFor="ev-industry" className="microlabel block mb-1.5">Industry</label>
+                <select id="ev-industry" className={inputCls} value={form.industry}
+                  onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}>
+                  {industries.map((ind) => <option key={ind} value={ind}>{ind}</option>)}
+                </select>
+              </div>
+              <div>
+                <span className="microlabel block mb-1.5">Business model</span>
+                <Segmented value={form.is_b2b ? 'b2b' : 'b2c'}
+                  options={[{ key: 'b2b', label: 'B2B' }, { key: 'b2c', label: 'B2C' }]}
+                  onChange={(k) => setForm((f) => ({ ...f, is_b2b: k === 'b2b' }))} />
+              </div>
+              <div>
+                <label htmlFor="ev-team" className="microlabel block mb-1.5">Team size</label>
+                <input id="ev-team" type="number" min={1} className={inputCls} value={form.team_size}
+                  onChange={(e) => setForm((f) => ({ ...f, team_size: Math.max(1, num(e.target.value)) }))} />
+              </div>
+              <div>
+                <span className="microlabel block mb-1.5">Previous founder exit</span>
+                <Segmented value={form.has_previous_exit ? 'yes' : 'no'}
+                  options={[{ key: 'no', label: 'No' }, { key: 'yes', label: 'Yes' }]}
+                  onChange={(k) => setForm((f) => ({ ...f, has_previous_exit: k === 'yes' }))} />
+              </div>
+              <div>
+                <label htmlFor="ev-funding" className="microlabel block mb-1.5">Total funding (USD)</label>
+                <input id="ev-funding" type="number" min={0} step={10000} className={inputCls} value={form.funding_total_usd}
+                  onChange={(e) => setForm((f) => ({ ...f, funding_total_usd: num(e.target.value) }))} />
+              </div>
+              <div>
+                <label htmlFor="ev-rounds" className="microlabel block mb-1.5">Funding rounds</label>
+                <input id="ev-rounds" type="number" min={0} className={inputCls} value={form.funding_rounds}
+                  onChange={(e) => setForm((f) => ({ ...f, funding_rounds: num(e.target.value) }))} />
+              </div>
+              <div>
+                <label htmlFor="ev-time" className="microlabel block mb-1.5">Months to first funding</label>
+                <input id="ev-time" type="number" min={0} className={inputCls} value={form.time_to_first_funding_months}
+                  onChange={(e) => setForm((f) => ({ ...f, time_to_first_funding_months: num(e.target.value) }))} />
+              </div>
+              <div>
+                <label htmlFor="ev-revenue" className="microlabel block mb-1.5">Revenue to date (USD)</label>
+                <input id="ev-revenue" type="number" min={0} step={1000} className={inputCls} value={form.sales_amount_usd}
+                  onChange={(e) => setForm((f) => ({ ...f, sales_amount_usd: num(e.target.value) }))} />
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={!form.name.trim() || evaluating}
+              className="relative w-full overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg bg-accent text-white text-[13px] font-medium py-2.5 hover:bg-accent-deep transition-colors disabled:opacity-60"
+            >
+              {evaluating ? (
+                <>
+                  <span className="absolute inset-y-0 w-1/3 bg-white/20 scanbar" />
+                  Scoring application…
+                </>
+              ) : (
+                'Evaluate'
+              )}
+            </button>
+            <p className="text-[11px] text-ink-3 text-center">
+              Scored instantly with the same decision-tree rules as the demo cohort.
+            </p>
+          </form>
+        ) : (
+          <div className="p-5 space-y-4">
+            <label className="block border border-dashed border-ink-3 rounded-xl px-4 py-8 text-center cursor-pointer hover:border-accent hover:bg-accent-soft/40 transition-colors">
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ''; }}
+              />
+              <Upload className="w-5 h-5 text-ink-3 mx-auto mb-2" />
+              <span className="block text-[13px] font-medium text-ink">Upload a CSV of applications</span>
+              <span className="block text-xs text-ink-3 mt-1">Click to browse — every row is scored on import</span>
+            </label>
+            {csvError && <p className="text-xs text-bad">{csvError}</p>}
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-ink-3">
+                Columns: name, industry, business_model, team_size, funding, rounds, months to funding, previous exit, revenue.
+              </p>
+              <button
+                onClick={downloadCsvTemplate}
+                className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-deep"
+              >
+                <FileDown className="w-3.5 h-3.5" /> Template
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ========== APP SHELL ========== */
 
 export default function Home() {
@@ -797,10 +1083,25 @@ export default function Home() {
   const [filter, setFilter] = useState<Filter>('all');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [screening, setScreening] = useState(false);
+  const [userStartups, setUserStartups] = useState<Startup[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const all = useMemo(() => [...userStartups, ...mockStartups], [userStartups]);
+  const counts = useMemo(() => countVerdicts(all), [all]);
+  const nextId = 1000 + userStartups.length;
 
   const openStartup = (id: number) => {
     setSelectedId(id);
     setFilter('all');
+    setView('apps');
+  };
+
+  const handleCreate = (created: Startup[]) => {
+    if (created.length === 0) return;
+    setUserStartups((prev) => [...created, ...prev]);
+    setModalOpen(false);
+    setFilter('all');
+    setSelectedId(created[0].id);
     setView('apps');
   };
 
@@ -872,18 +1173,24 @@ export default function Home() {
 
         <div className="p-3 border-t border-line space-y-2">
           <button
+            onClick={() => setModalOpen(true)}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-accent text-white text-[13px] font-medium py-2.5 hover:bg-accent-deep transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> New evaluation
+          </button>
+          <button
             onClick={runScreen}
             disabled={screening}
-            className="relative w-full overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg bg-accent text-white text-[13px] font-medium py-2.5 hover:bg-accent-deep transition-colors disabled:opacity-90"
+            className="relative w-full overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg border border-line text-ink-2 text-[13px] font-medium py-2 hover:bg-tint transition-colors disabled:opacity-80"
           >
             {screening ? (
               <>
-                <span className="absolute inset-y-0 w-1/3 bg-white/20 scanbar" />
-                Screening 50 applications…
+                <span className="absolute inset-y-0 w-1/3 bg-ink/10 scanbar" />
+                Screening cohort…
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5" /> Run screen
+                <Play className="w-3.5 h-3.5" /> Re-run demo screen
               </>
             )}
           </button>
@@ -899,11 +1206,10 @@ export default function Home() {
             <span className="text-[13px] font-semibold">DealFlow AI</span>
           </div>
           <button
-            onClick={runScreen}
-            disabled={screening}
+            onClick={() => setModalOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-accent text-white text-xs font-medium px-3 py-1.5"
           >
-            <Play className="w-3 h-3" /> {screening ? 'Screening…' : 'Run screen'}
+            <Plus className="w-3 h-3" /> New evaluation
           </button>
         </div>
         <div className="flex gap-1 px-3 pb-2 overflow-x-auto">
@@ -924,13 +1230,22 @@ export default function Home() {
       {/* Main */}
       <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         <div className={`flex-1 min-h-0 ${view === 'apps' ? 'flex flex-col' : 'overflow-y-auto'}`}>
-          {view === 'overview' && <OverviewView onOpenStartup={openStartup} />}
+          {view === 'overview' && <OverviewView data={all} counts={counts} onOpenStartup={openStartup} />}
           {view === 'apps' && (
-            <AppsView filter={filter} setFilter={setFilter} selectedId={selectedId} setSelectedId={setSelectedId} />
+            <AppsView
+              data={all}
+              counts={counts}
+              filter={filter}
+              setFilter={setFilter}
+              selectedId={selectedId}
+              setSelectedId={setSelectedId}
+            />
           )}
           {view === 'methodology' && <MethodologyView />}
         </div>
       </main>
+
+      <EvaluateModal open={modalOpen} onClose={() => setModalOpen(false)} onCreate={handleCreate} nextId={nextId} />
     </div>
   );
 }

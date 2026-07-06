@@ -57,7 +57,7 @@ export interface ScoreFactor {
   benchmark?: string;
 }
 
-const industries = [
+export const industries = [
   "SaaS", "Fintech", "EdTech", "AgriTech", "HealthTech",
   "E-commerce", "LogTech", "CyberSec", "AI/ML", "GovTech",
   "PropTech", "RecruTech", "CleanTech", "FoodTech", "LegalTech"
@@ -96,18 +96,27 @@ function mulberry32(seed: number) {
 }
 const rand = mulberry32(20260705);
 
-function generateStartups(): Startup[] {
-  const startups: Startup[] = [];
-  
-  for (let i = 0; i < 50; i++) {
-    const industry = industries[i % industries.length];
-    const is_b2b = b2bIndustries.has(industry);
-    const has_previous_exit = rand() < 0.15;
-    const team_size = Math.max(1, Math.round(rand() * 25 + 1));
-    const funding_total_usd = Math.round((rand() * 2000000 + (has_previous_exit ? 500000 : 0)) / 10000) * 10000;
-    const funding_rounds = funding_total_usd === 0 ? 0 : Math.max(1, Math.min(4, Math.round(Math.log2(funding_total_usd / 50000 + 1))));
-    const time_to_first_funding_months = funding_rounds === 0 ? 0 : Math.max(1, Math.round(rand() * 24 + 2));
-    const sales_amount_usd = rand() < 0.6 ? 0 : Math.round(rand() * 100000);
+export interface StartupInput {
+  name: string;
+  industry: string;
+  is_b2b: boolean;
+  team_size: number;
+  funding_total_usd: number;
+  funding_rounds: number;
+  time_to_first_funding_months: number;
+  has_previous_exit: boolean;
+  sales_amount_usd: number;
+  founder_name?: string;
+  description?: string;
+  website?: string;
+}
+
+// Scores a raw application with the same decision-tree rules the demo data uses
+export function evaluateStartup(input: StartupInput, id: number, jitter = 0): Startup {
+  const {
+    industry, is_b2b, team_size, funding_total_usd, funding_rounds,
+    time_to_first_funding_months, has_previous_exit, sales_amount_usd,
+  } = input;
 
     // ML scoring logic (mirrors decision tree)
     let score = 30; // base
@@ -120,7 +129,7 @@ function generateStartups(): Startup[] {
     if (team_size >= 5 && team_size <= 15) score += 7;
     else if (team_size > 15 && !has_previous_exit) score -= 5;
     if (sales_amount_usd > 0) score += 5;
-    score = Math.max(5, Math.min(98, score + Math.round(rand() * 10 - 5)));
+    score = Math.max(5, Math.min(98, score + jitter));
 
     const verdict: "high" | "moderate" | "low" = score >= 65 ? "high" : score >= 35 ? "moderate" : "low";
 
@@ -371,34 +380,64 @@ function generateStartups(): Startup[] {
     const defaultMacro: MacroAnalysis = { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Medium', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Uzbekistan's 5.5% GDP growth is among the highest in the CIS, driven by liberalization, privatization, and growing FDI. Key risks: 9.8% inflation (above 8% target), 8% currency depreciation, and evolving regulation. For ${industry.toLowerCase()}, the most relevant factor is the government's digital transformation commitment.` };
     const macro_analysis = mi[industry] || defaultMacro;
 
-    startups.push({
-      id: i + 1,
-      name: startupNames[i] || `Startup ${i + 1}`,
-      industry,
-      description: `${is_b2b ? "B2B" : "B2C"} ${industry.toLowerCase()} platform for the Central Asian market`,
-      is_b2b,
-      team_size,
-      funding_total_usd,
-      funding_rounds,
-      time_to_first_funding_months,
-      has_previous_exit,
-      founder_name: founderNames[i % founderNames.length],
-      founder_role: "CEO",
-      website: i % 3 === 0 ? `${startupNames[i]?.toLowerCase().replace(/\s+/g, "") || "startup"}.uz` : "",
-      sales_amount_usd,
-      score,
-      verdict,
-      strengths,
-      red_flags,
-      decision_path,
-      risks,
-      market_research,
-      macro_analysis,
-      score_breakdown,
-    });
-  }
+  return {
+    id,
+    name: input.name,
+    industry,
+    description: input.description ?? `${is_b2b ? "B2B" : "B2C"} ${industry.toLowerCase()} platform for the Central Asian market`,
+    is_b2b,
+    team_size,
+    funding_total_usd,
+    funding_rounds,
+    time_to_first_funding_months,
+    has_previous_exit,
+    founder_name: input.founder_name || "Not provided",
+    founder_role: "CEO",
+    website: input.website ?? "",
+    sales_amount_usd,
+    score,
+    verdict,
+    strengths,
+    red_flags,
+    decision_path,
+    risks,
+    market_research,
+    macro_analysis,
+    score_breakdown,
+  };
+}
 
-  // Sort by score descending
+function generateStartups(): Startup[] {
+  const startups: Startup[] = [];
+  for (let i = 0; i < 50; i++) {
+    const industry = industries[i % industries.length];
+    const is_b2b = b2bIndustries.has(industry);
+    const has_previous_exit = rand() < 0.15;
+    const team_size = Math.max(1, Math.round(rand() * 25 + 1));
+    const funding_total_usd = Math.round((rand() * 2000000 + (has_previous_exit ? 500000 : 0)) / 10000) * 10000;
+    const funding_rounds = funding_total_usd === 0 ? 0 : Math.max(1, Math.min(4, Math.round(Math.log2(funding_total_usd / 50000 + 1))));
+    const time_to_first_funding_months = funding_rounds === 0 ? 0 : Math.max(1, Math.round(rand() * 24 + 2));
+    const sales_amount_usd = rand() < 0.6 ? 0 : Math.round(rand() * 100000);
+    startups.push(
+      evaluateStartup(
+        {
+          name: startupNames[i] || `Startup ${i + 1}`,
+          industry,
+          is_b2b,
+          team_size,
+          funding_total_usd,
+          funding_rounds,
+          time_to_first_funding_months,
+          has_previous_exit,
+          sales_amount_usd,
+          founder_name: founderNames[i % founderNames.length],
+          website: i % 3 === 0 ? `${startupNames[i]?.toLowerCase().replace(/\s+/g, "") || "startup"}.uz` : "",
+        },
+        i + 1,
+        Math.round(rand() * 10 - 5)
+      )
+    );
+  }
   startups.sort((a, b) => b.score - a.score);
   return startups;
 }
