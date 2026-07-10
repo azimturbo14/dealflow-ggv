@@ -1,3 +1,5 @@
+import { resolveMarket, type MarketContext, type Band } from './markets';
+
 export interface MarketResearch {
   tam: string;
   sam: string;
@@ -18,6 +20,13 @@ export interface MacroAnalysis {
   foreign_investment_trend: string;
   currency_stability: string;
   assessment: string;
+  // Adaptive, forward-looking capital signals (resolved per country)
+  market_name?: string;
+  policy_rate?: string;
+  cost_of_capital?: Band;
+  follow_on_availability?: Band;
+  fx_risk?: Band;
+  assumptions?: string[];
 }
 
 // Regression-based forecast of the sector's addressable market
@@ -135,51 +144,20 @@ function mulberry32(seed: number) {
 }
 const rand = mulberry32(20260705);
 
-// ---- Numeric market model per sector (drives the regression + market scoring) ----
-type SectorNums = { tam: number; sam: number; som: number; cagr: number; competition: 'Low' | 'Moderate' | 'High' };
-const sectorNumbers: Record<string, SectorNums> = {
-  SaaS:         { tam: 12.4, sam: 890,  som: 18, cagr: 0.223, competition: 'High' },
-  Fintech:      { tam: 8.7,  sam: 1200, som: 12, cagr: 0.281, competition: 'High' },
-  EdTech:       { tam: 5.2,  sam: 340,  som: 15, cagr: 0.197, competition: 'Moderate' },
-  AgriTech:     { tam: 3.8,  sam: 520,  som: 26, cagr: 0.154, competition: 'Low' },
-  HealthTech:   { tam: 6.1,  sam: 280,  som: 8,  cagr: 0.248, competition: 'Moderate' },
-  'E-commerce': { tam: 9.3,  sam: 1800, som: 9,  cagr: 0.312, competition: 'High' },
-  LogTech:      { tam: 4.2,  sam: 380,  som: 19, cagr: 0.176, competition: 'Low' },
-  CyberSec:     { tam: 2.8,  sam: 190,  som: 10, cagr: 0.263, competition: 'Low' },
-  'AI/ML':      { tam: 7.5,  sam: 410,  som: 8,  cagr: 0.342, competition: 'Moderate' },
-  GovTech:      { tam: 3.1,  sam: 450,  som: 14, cagr: 0.208, competition: 'Moderate' },
-  GreenTech:    { tam: 3.4,  sam: 260,  som: 13, cagr: 0.243, competition: 'Low' },
-  DeepTech:     { tam: 5.8,  sam: 300,  som: 9,  cagr: 0.290, competition: 'Low' },
-  GameDev:      { tam: 2.1,  sam: 140,  som: 7,  cagr: 0.221, competition: 'Moderate' },
-};
-const defaultNums: SectorNums = { tam: 4.5, sam: 310, som: 12, cagr: 0.185, competition: 'Moderate' };
-
-// Canonical sector key used across the numeric + qualitative tables
-export function sectorKey(industry: string): string {
-  const s = (industry || '').trim().toLowerCase();
-  const map: Record<string, string> = {
-    'ai/ml': 'AI/ML', 'ai': 'AI/ML', 'ai / data science': 'AI/ML', 'data science': 'AI/ML', 'machine learning': 'AI/ML',
-    'fintech': 'Fintech', 'saas': 'SaaS', 'edtech': 'EdTech', 'greentech': 'GreenTech', 'cleantech': 'GreenTech',
-    'deeptech': 'DeepTech', 'gamedev': 'GameDev', 'game development': 'GameDev', 'agritech': 'AgriTech',
-    'healthtech': 'HealthTech', 'e-commerce': 'E-commerce', 'ecommerce': 'E-commerce', 'logtech': 'LogTech',
-    'cybersec': 'CyberSec', 'cybersecurity': 'CyberSec', 'govtech': 'GovTech',
-  };
-  if (map[s]) return map[s];
-  if (sectorNumbers[industry]) return industry;
-  return 'default';
-}
-
-// Deterministic log-linear regression on a seeded 6-year TAM series → 5-year projection
-export function buildForecast(industry: string, samOverride?: number, somOverride?: number, horizon = 5): MarketForecast {
-  const key = sectorKey(industry);
-  const nums = sectorNumbers[key] || defaultNums;
+// Deterministic log-linear regression on a seeded 6-year TAM series → 5-year projection.
+// Accepts a resolved MarketContext, or a raw industry string (resolved with no country)
+// for lightweight previews.
+export function buildForecast(market: MarketContext | string, samOverride?: number, somOverride?: number, horizon = 5): MarketForecast {
+  const mkt: MarketContext = typeof market === 'string' ? resolveMarket('', market) : market;
+  const tamB = mkt.regional_tam_b;
+  const cagr = mkt.cagr;
   const baseYear = 2025;
   // Small fixed wobble so the fit is realistic (R² < 1) yet fully deterministic
   const wob = [0.11, -0.085, 0.06, -0.10, 0.045, 0.02];
   const history: { year: number; tam: number }[] = [];
   for (let i = 0; i < 6; i++) {
     const yr = baseYear - 5 + i;
-    const base = nums.tam / Math.pow(1 + nums.cagr, baseYear - yr);
+    const base = tamB / Math.pow(1 + cagr, baseYear - yr);
     history.push({ year: yr, tam: +(base * (1 + wob[i])).toFixed(3) });
   }
   // Ordinary least squares on x = year index (0..5), y = ln(tam)
@@ -209,8 +187,8 @@ export function buildForecast(industry: string, samOverride?: number, somOverrid
       hi: +Math.exp(mean + spread).toFixed(3),
     });
   }
-  const sam_now = samOverride ?? nums.sam;
-  const som_now = somOverride ?? nums.som;
+  const sam_now = samOverride ?? mkt.sam_m;
+  const som_now = somOverride ?? mkt.som_m;
   const som_exit = +(som_now * Math.pow(1 + cagrModeled, horizon)).toFixed(1);
   return {
     history,
@@ -269,16 +247,17 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
     time_to_first_funding_months, has_previous_exit, sales_amount_usd,
   } = input;
 
-  const key = sectorKey(industry);
-  const nums = sectorNumbers[key] || defaultNums;
   const stage = input.stage || (funding_rounds >= 2 ? 'Growth' : sales_amount_usd > 0 ? 'Launched' : funding_rounds >= 1 ? 'MVP' : 'Idea');
-  const country = input.country || 'Uzbekistan';
+  const country = input.country || '';
+  // Resolve the country × sector market once; every market/macro factor reads from it.
+  const mkt = resolveMarket(country, industry);
+  const key = mkt.sector.key;
   const previous_investment = input.previous_investment ?? (funding_rounds > 0);
   const unique_tech = input.unique_tech ?? false;
   const ask = input.ask_amount_usd ?? 0;
   const round_size = input.round_size_usd ?? funding_total_usd;
   const background = input.founder_background || '';
-  const forecast = buildForecast(industry, input.sam_usd, input.som_usd);
+  const forecast = buildForecast(mkt, input.sam_usd, input.som_usd);
 
   // ---------------- Pillar 1 · Team & Founder (max 25) ----------------
   const teamF: ScoreFactor[] = [];
@@ -436,70 +415,69 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
     explanation: `Projecting the obtainable market forward at the modeled CAGR gives ~$${forecast.som_exit}M in ${forecast.horizon} years. This is the realistic revenue ceiling the fund underwrites against.`,
     threshold: 'SOM ≥$20M: +8 · ≥$12M: +5 · else +2',
   });
-  const compImpact = nums.competition === 'Low' ? 6 : nums.competition === 'Moderate' ? 3 : 1;
+  const compImpact = mkt.competition === 'Low' ? 6 : mkt.competition === 'Moderate' ? 3 : 1;
   mktF.push({
     criterion: 'Competitive Density',
-    value: `${nums.competition} competition`,
+    value: `${mkt.competition} competition`,
     impact: compImpact, max_impact: 6,
     direction: compImpact >= 3 ? 'positive' : 'negative',
-    explanation: nums.competition === 'Low'
+    explanation: mkt.competition === 'Low'
       ? 'A thin competitive field means room to establish a category position before incumbents react.'
-      : nums.competition === 'High'
+      : mkt.competition === 'High'
         ? 'A crowded field with funded incumbents — the startup needs a specific niche and a sharp wedge to win.'
         : 'Moderate competition — winnable with clear differentiation and execution speed.',
     threshold: 'Low: +6 · Moderate: +3 · High: +1',
   });
   const mktScore = mktF.reduce((s, f) => s + f.impact, 0);
 
-  // ---------------- Pillar 4 · Macro & Deal Fit (max 15) ----------------
+  // ---------------- Pillar 4 · Macro & Capital Environment (max 15) ----------------
+  // Adaptive: every factor is resolved for the deal's own country (mkt.country).
   const macroF: ScoreFactor[] = [];
-  const macro = getMacro(key, industry);
+  const macro = getMacro(mkt);
+  const cc = mkt.country;
+  const marketLabel = `${cc.name}${mkt.countryConfidence !== 'exact' ? ' (est.)' : ''}`;
+
   const regImpact = macro.regulatory_risk === 'Low' ? 4 : macro.regulatory_risk === 'Medium' ? 2 : 1;
   macroF.push({
     criterion: 'Regulatory Environment',
-    value: `${macro.regulatory_risk} risk`,
+    value: `${macro.regulatory_risk} risk · ${marketLabel}`,
     impact: regImpact, max_impact: 4,
     direction: regImpact >= 4 ? 'positive' : regImpact >= 2 ? 'neutral' : 'negative',
-    explanation: `Regulatory risk for ${key} in Uzbekistan is rated ${macro.regulatory_risk}. Heavier regulation slows go-to-market and raises compliance cost, though it can also protect incumbents.`,
-    threshold: 'Low: +4 · Medium: +2 · High: +1',
+    explanation: `Ease of building and selling ${mkt.sector.label} in ${cc.name} is rated ${cc.regulatory_ease}. ${cc.ecosystem}`,
+    threshold: 'Ease High: +4 · Medium: +2 · Low: +1',
   });
-  const home = /uzbekistan|uz/i.test(country);
+
+  // Macro stability — inflation + currency risk (the erosion risk on a UZS/EGP/TRY-type base)
+  const stab = cc.fx_risk === 'Low' && cc.inflation < 6 ? 4 : cc.fx_risk === 'High' || cc.inflation >= 20 ? 1 : 2;
   macroF.push({
-    criterion: 'Geography & Currency',
-    value: home ? 'Uzbekistan (home market)' : country,
-    impact: home ? 3 : 1, max_impact: 3,
-    direction: home ? 'positive' : 'neutral',
-    explanation: home
-      ? 'Registered in Uzbekistan — directly in IT-Park Ventures’ mandate, eligible for local support and collateral-free lending. UZS cost base with potential hard-currency revenue is favorable.'
-      : `Registered in ${country}. Outside the core mandate; the fund can still invest but weighs cross-border and FX considerations.`,
-    threshold: 'Home market: +3 · other: +1',
+    criterion: 'Macro Stability (inflation & FX)',
+    value: `${cc.inflation}% inflation · ${cc.fx_risk} FX risk`,
+    impact: stab, max_impact: 4,
+    direction: stab >= 4 ? 'positive' : stab >= 2 ? 'neutral' : 'negative',
+    explanation: `${cc.fx_note}. At ${cc.inflation}% inflation, ${stab <= 1 ? 'local-currency revenue erodes fast and hard-currency costs bite — a real drag on the underlying economics.' : stab >= 4 ? 'the currency base is stable, protecting margins and reported returns.' : 'inflation is manageable but worth watching.'}`,
+    threshold: 'Stable + low inflation: +4 · moderate: +2 · high FX/inflation: +1',
   });
+
+  // Cost of capital & follow-on availability — the forward funding risk
+  const capScore = (cc.capital_availability === 'High' ? 2 : cc.capital_availability === 'Medium' ? 1 : 0)
+    + (mkt.cost_of_capital === 'Low' ? 2 : mkt.cost_of_capital === 'Medium' ? 1 : 0);
+  macroF.push({
+    criterion: 'Cost of Capital & Follow-on',
+    value: `Policy rate ${cc.policy_rate}% · follow-on ${cc.capital_availability}`,
+    impact: capScore, max_impact: 4,
+    direction: capScore >= 3 ? 'positive' : capScore >= 2 ? 'neutral' : 'negative',
+    explanation: `A ${cc.policy_rate}% benchmark rate sets a ${mkt.cost_of_capital.toLowerCase()} cost of capital, and next-round capital depth in ${cc.name} is ${cc.capital_availability.toLowerCase()}. ${cc.capital_availability === 'Low' ? 'Thin local capital means the company likely has to raise its next round out-of-market — a real execution risk.' : 'Adequate local capital supports the next raise.'}`,
+    threshold: 'Cheap capital + deep follow-on: +4 · else scaled down',
+  });
+
+  // FDI / ecosystem trend
   macroF.push({
     criterion: 'Capital / FDI Trend',
     value: macro.foreign_investment_trend,
     impact: 3, max_impact: 3,
     direction: 'positive',
-    explanation: 'Rising foreign direct investment improves follow-on prospects and exit optionality across the ecosystem.',
+    explanation: `Direction of foreign investment into ${cc.name} shapes follow-on and exit optionality: ${macro.foreign_investment_trend}.`,
     threshold: 'Rising FDI: +3',
-  });
-  let askImpact = 2;
-  let askVal = ask > 0 ? fmtUsd(ask) : 'Not specified';
-  if (ask > 0) {
-    if (ask >= 10000 && ask <= 1_000_000) askImpact = 5;
-    else if (ask <= 2_000_000) askImpact = 3;
-    else askImpact = 1;
-  }
-  macroF.push({
-    criterion: 'Ask vs. Fund Mandate',
-    value: askVal,
-    impact: askImpact, max_impact: 5,
-    direction: askImpact >= 5 ? 'positive' : askImpact >= 3 ? 'neutral' : 'negative',
-    explanation: ask > 0
-      ? (ask >= 10000 && ask <= 1_000_000
-        ? `The ${fmtUsd(ask)} ask sits inside IT-Park Ventures’ $10K–$1M ticket range — a clean fit.`
-        : `The ${fmtUsd(ask)} ask is outside the typical $10K–$1M range; may need syndication or a smaller entry.`)
-      : 'No ask specified — the fund cannot size the deal against its $10K–$1M mandate.',
-    threshold: 'Within $10K–$1M: +5 · within $2M: +3 · else/none: +1–2',
   });
   const macroScore = macroF.reduce((s, f) => s + f.impact, 0);
 
@@ -532,21 +510,22 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
   if (has_previous_exit) strengths.push('Founder with prior exit — proven execution ability');
   if (unique_tech) strengths.push('Proprietary technology / patents — defensibility');
   if (forecast.cagr >= 0.25) strengths.push(`Fast-growing market — ${(forecast.cagr * 100).toFixed(0)}% modeled CAGR`);
-  if (nums.competition === 'Low') strengths.push('Low competitive density — room to build a category position');
+  if (mkt.competition === 'Low') strengths.push('Low competitive density — room to build a category position');
   if (sales_amount_usd > 0) strengths.push(`${fmtUsd(sales_amount_usd)} in revenue — market validation exists`);
   if (rg != null && rg >= 20) strengths.push(`${rg}% monthly growth — top-decile trajectory`);
   if (previous_investment) strengths.push('Prior investor validation');
-  if (home) strengths.push('Uzbekistan-registered — squarely in the fund mandate');
+  if (cc.capital_availability === 'High') strengths.push(`${cc.name} — deep local capital for follow-on rounds`);
+  if (cc.fx_risk === 'Low' && cc.inflation < 6) strengths.push(`Stable macro base (${cc.currency}, ${cc.inflation}% inflation)`);
   if (strengths.length === 0) strengths.push('Early-stage — upside contingent on execution and market timing');
 
   const red_flags: string[] = [];
   if (!has_previous_exit && !input.successful_project) red_flags.push('First-time founder, no delivery record — execution risk');
   if (sales_amount_usd === 0) red_flags.push('Pre-revenue — product-market fit unproven');
   if (rg == null && input.sam_usd == null) red_flags.push('No financial/market data supplied — verdict runs on sector defaults');
-  if (nums.competition === 'High') red_flags.push('Crowded market with funded incumbents');
+  if (mkt.competition === 'High') red_flags.push('Crowded market with funded incumbents');
   if (runway != null && runway < 6) red_flags.push(`Only ${runway} months runway — near-term funding pressure`);
-  if (ask > 1_000_000) red_flags.push('Ask above the $10K–$1M mandate');
-  if (!home) red_flags.push('Registered outside Uzbekistan — outside core mandate');
+  if (cc.fx_risk === 'High' || cc.inflation >= 20) red_flags.push(`Macro/FX risk in ${cc.name} — ${cc.inflation}% inflation, ${cc.fx_note}`);
+  if (cc.capital_availability === 'Low') red_flags.push(`Thin local capital in ${cc.name} — next round likely raised out-of-market`);
   if (red_flags.length === 0) red_flags.push('No critical red flags detected at this stage');
 
   // Decision path (audit log) — pillar driven
@@ -562,18 +541,18 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
   const risks: string[] = [];
   if (!has_previous_exit) risks.push('First-time founder execution risk: ~75% of first-time founders fail to reach Series A. Mitigated by domain expertise or early traction.');
   if (rg == null) risks.push('Incomplete financials: growth and runway were not supplied, so traction is scored conservatively. Request the financial model to firm up the verdict.');
-  if (nums.competition === 'High') risks.push(`Competitive risk: ${key} is a high-density market; without a sharp niche the startup competes against funded incumbents.`);
+  if (mkt.competition === 'High') risks.push(`Competitive risk: ${key} is a high-density market; without a sharp niche the startup competes against funded incumbents.`);
   if (forecast.cagr < 0.12) risks.push('Market growth risk: the regression projects sub-12% annual market growth, capping the venture upside.');
   if (risks.length === 0) risks.push('No significant structural risks identified across team, traction, market and macro.');
 
   const score_breakdown: ScoreFactor[] = pillars.flatMap((p) => p.factors);
-  const market_research = getMarket(key, industry, forecast);
+  const market_research = getMarket(mkt, forecast);
 
   return {
     id,
     name: input.name,
     industry,
-    description: input.description ?? `${is_b2b ? 'B2B' : 'B2C'} ${key.toLowerCase()} venture for the Central Asian market`,
+    description: input.description ?? `${is_b2b ? "B2B" : "B2C"} ${mkt.sector.label} venture`,
     is_b2b,
     team_size,
     funding_total_usd,
@@ -608,45 +587,47 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
   };
 }
 
-// ---- Qualitative market research (kept from the original model) ----
-const md: Record<string, MarketResearch> = {
-  SaaS: { tam: '$12.4B', sam: '$890M', som: '$18M', som_explanation: 'With high competition and established global players, a new B2B SaaS startup can realistically capture 1-3% of SAM. Early revenue and a niche vertical focus are critical to reaching $18M+ in 5 years.', market_viable: true, capture_potential: 'Moderate', growth_rate: '22.3% CAGR', competition: 'High', key_trends: ['Cloud adoption accelerating across Uzbekistan enterprises', 'Government digitalization mandate driving B2B SaaS demand', 'Low local SaaS saturation — first-mover advantages'], assessment: `The Central Asian SaaS market is in early growth. Uzbekistan's government is pushing digital transformation across ministries and SOEs, creating forced demand for B2B software. Enterprise cloud penetration is only 8-12% vs 35-45% in developed markets. This gap is the opportunity and the risk — the market exists but requires education and adaptation to local practices.` },
-  Fintech: { tam: '$8.7B', sam: '$1.2B', som: '$12M', som_explanation: 'Fintech is crowded with well-funded players (Uzum, Payme). A new entrant without a specific niche can capture 0.5-1.5% of SAM. Niche focus (e.g., SME lending, trade finance) could push this to 2-3%.', market_viable: true, capture_potential: 'Low', growth_rate: '28.1% CAGR', competition: 'High', key_trends: ['Central bank licensing 15+ new digital banks by 2026', 'Mobile banking penetration jumped from 18% to 42% in 2 years', 'Cross-border payments remain a major SME pain point'], assessment: `Uzbekistan's fintech is the most active sector in Central Asia. Regulatory sandboxes and fast-tracked licenses help, but 40+ fintech startups compete for 36M people. Success requires a specific niche — generic plays struggle against Uzum ($150M+ raised) and Payme.` },
-  EdTech: { tam: '$5.2B', sam: '$340M', som: '$15M', som_explanation: 'With $200M government commitment and moderate competition, a B2B EdTech startup can capture 3-5% of SAM. B2C EdTech is limited by low household spend — B2B is the viable path to $15M+.', market_viable: true, capture_potential: 'Moderate', growth_rate: '19.7% CAGR', competition: 'Moderate', key_trends: ['Government investing $200M in digital education infrastructure', 'STEM demand growing 25% year-over-year', 'Corporate training market underpenetrated by technology'], assessment: `EdTech benefits from strong government support — $200M committed to digitize 80% of schools by 2027. But B2C is price-sensitive ($15-30/year household spend on EdTech). B2B (corporate training, school management) has significantly better unit economics.` },
-  AgriTech: { tam: '$3.8B', sam: '$520M', som: '$26M', som_explanation: 'Low competition and massive greenfield opportunity (3% tech adoption). An AgriTech startup with government subsidy access can capture 4-6% of SAM — one of the highest capture potentials in the region.', market_viable: true, capture_potential: 'High', growth_rate: '15.4% CAGR', competition: 'Low', key_trends: ['Agriculture employs 27% of workforce but only 3% use tech', 'Government subsidies for precision agriculture', 'Export-oriented horticulture driving supply chain demand'], assessment: `Agriculture is Uzbekistan's #2 sector, yet only 3% of farms use digital tools — massive greenfield opportunity. The biggest challenge is last-mile distribution to rural areas with limited internet and low digital literacy.` },
-  HealthTech: { tam: '$6.1B', sam: '$280M', som: '$8M', som_explanation: 'Moderate competition but slow 12-18 month procurement cycles and strict medical regulations limit capture to 2-4% of SAM. Regulatory compliance costs are a significant barrier for early-stage startups.', market_viable: true, capture_potential: 'Low', growth_rate: '24.8% CAGR', competition: 'Moderate', key_trends: ['Telemedicine legalized and insurance expanded in 2024', 'Medical data digitization mandate for all clinics by 2026', 'Shortage of 12,000 doctors driving AI diagnostics demand'], assessment: `Healthcare is modernizing fast — EHR mandate by 2026, telemedicine insurance coverage expanded. Doctor-to-patient ratio is 1:1,200 (3x worse than WHO recommends). Procurement cycles are slow (12-18 months) and medical software regulations are stringent.` },
-  'E-commerce': { tam: '$9.3B', sam: '$1.8B', som: '$9M', som_explanation: 'Uzum Mall and olcha.uz control ~70% of the market. A new e-commerce player without a specific vertical niche can only capture 0.3-0.8% of SAM. Vertical specialization (fashion, electronics, groceries) is essential.', market_viable: false, capture_potential: 'Low', growth_rate: '31.2% CAGR', competition: 'High', key_trends: ['E-commerce grew 65% in 2024 — fastest in Central Asia', 'Uzum Mall and olcha.uz dominate but verticals still open', '$500M in new warehouse investments improving logistics'], assessment: `65% growth in 2024, but Uzum Mall and olcha.uz control ~70% of the market. New entrants need specific vertical niches. Last-mile delivery outside Tashkent costs 2-3x more than in the capital.` },
-  LogTech: { tam: '$4.2B', sam: '$380M', som: '$19M', som_explanation: 'Low competition and only 15% tech adoption among logistics firms. A LogTech startup can capture 4-6% of SAM by targeting cross-border trade corridors and SEZ-based warehouses.', market_viable: true, capture_potential: 'High', growth_rate: '17.6% CAGR', competition: 'Low', key_trends: ['Cross-border trade with China/Kazakhstan growing 20% annually', 'Only 15% of logistics companies use route optimization', '14 special economic zones driving warehousing demand'], assessment: `Uzbekistan is a natural logistics hub between China, Kazakhstan, and Afghanistan. 14 SEZs with simplified customs. Only 15% of logistics firms use optimization software. Sales cycles are long (6-12 months) and customers are price-sensitive.` },
-  CyberSec: { tam: '$2.8B', sam: '$190M', som: '$10M', som_explanation: 'Low competition with near-zero local vendors. A local CyberSec startup can capture 4-6% of SAM by replacing expensive imported solutions. Regulatory mandate (annual audits) provides guaranteed demand.', market_viable: true, capture_potential: 'High', growth_rate: '26.3% CAGR', competition: 'Low', key_trends: ['Mandatory cybersecurity audits for financial institutions since 2024', 'Zero local enterprise-grade vendors — all imports', 'Government building national SOC'], assessment: `New regulations force financial institutions into annual audits, creating demand. Nearly all solutions are imported (mostly Russian), opening space for local vendors. The challenge: most enterprises don't prioritize cybersecurity until after a breach.` },
-  'AI/ML': { tam: '$7.5B', sam: '$410M', som: '$8M', som_explanation: 'Fastest-growing sector but most local AI startups are pre-revenue. Capture potential is 1-3% of SAM — realistic only for startups with specific vertical AI applications and paying customers.', market_viable: true, capture_potential: 'Low', growth_rate: '34.2% CAGR', competition: 'Moderate', key_trends: ['Government AI strategy with $100M allocation', 'Uzbek language NLP severely underdeveloped', '3,000+ CS graduates/year from local universities'], assessment: `Fastest-growing sector with $100M government AI fund. The unique opportunity is Uzbek-language NLP for 35M speakers. However, most local AI startups are pre-revenue and rely on consulting/grants.` },
-  GovTech: { tam: '$3.1B', sam: '$450M', som: '$14M', som_explanation: 'Government is an active buyer but sales cycles are 12-24 months. A GovTech startup can capture 2-4% of SAM by winning 2-3 government contracts. Over-reliance on a single client is the key risk.', market_viable: true, capture_potential: 'Moderate', growth_rate: '20.8% CAGR', competition: 'Moderate', key_trends: ['E-government processing 50M+ transactions/year', 'Smart City Tashkent with $300M budget', 'Open data portals enabling civic tech'], assessment: `Government is an active buyer — 50M+ e-gov transactions/year, $300M Smart City budget. But sales cycles are 12-24 months, payments can be delayed, and over-reliance on a single government client is a key risk.` },
-  GreenTech: { tam: '$3.4B', sam: '$260M', som: '$13M', som_explanation: 'Emerging sector with strong policy tailwinds and low competition. A GreenTech startup can capture 4-6% of SAM by aligning with the national decarbonization and solar programs.', market_viable: true, capture_potential: 'High', growth_rate: '24.3% CAGR', competition: 'Low', key_trends: ['National target of 25% renewable generation by 2030', 'Solar & wind auctions attracting international developers', 'Energy-efficiency mandates for new construction'], assessment: `Uzbekistan is investing heavily in renewables with a 25%-by-2030 target and multi-GW solar/wind auctions. GreenTech benefits from policy support and low competition, but hardware-heavy models face capital intensity and long payback periods.` },
-  DeepTech: { tam: '$5.8B', sam: '$300M', som: '$9M', som_explanation: 'High-defensibility but capital- and talent-intensive. Realistic capture is 2-3% of SAM, higher if the IP is genuinely differentiated and export-oriented.', market_viable: true, capture_potential: 'Moderate', growth_rate: '29.0% CAGR', competition: 'Low', key_trends: ['Growing pool of technical talent from local universities', 'Government innovation grants for R&D-heavy ventures', 'Export potential reduces reliance on the domestic market'], assessment: `DeepTech offers the strongest defensibility via proprietary IP, but it is capital- and talent-intensive with longer time-to-revenue. Winners typically sell into export markets, using Uzbekistan's lower cost base as an R&D advantage.` },
-  GameDev: { tam: '$2.1B', sam: '$140M', som: '$7M', som_explanation: 'A hit-driven market where a single successful title can dominate. Capture is highly variable; disciplined studios with live-ops can reach 4-5% of SAM.', market_viable: true, capture_potential: 'Moderate', growth_rate: '22.1% CAGR', competition: 'Moderate', key_trends: ['Young, mobile-first population (median age 29)', 'Growing local studio scene and publisher interest', 'Rising in-app purchase spend as payments mature'], assessment: `Game development rides a young, mobile-first demographic. It is hit-driven and marketing-intensive, so studios with live-ops discipline and a portfolio approach de-risk the volatility. Payment rails maturing locally improves monetization.` },
-};
-const defaultMarket: MarketResearch = { tam: '$4.5B', sam: '$310M', som: '$12M', som_explanation: 'Without clear differentiation or early revenue, this startup can realistically capture 3-5% of SAM in its first 3-5 years.', market_viable: true, capture_potential: 'Moderate', growth_rate: '18.5% CAGR', competition: 'Moderate', key_trends: ['Digital adoption accelerating across all sectors', 'Local talent pool growing with expanding CS programs', 'Regional market underserved by global platforms'], assessment: `The Central Asian tech market is in early growth with significant untapped potential. Local startups understand regional business practices, regulations, and language better than global platforms. The key challenge is building sustainable revenue in a price-sensitive market.` };
+// ---- Adaptive market research — generated from the resolved country x sector ----
+const capBand = (comp: 'Low'|'Moderate'|'High'): 'Low'|'Moderate'|'High' =>
+  comp === 'Low' ? 'High' : comp === 'Moderate' ? 'Moderate' : 'Low';
+const usd = (m: number) => m >= 1000 ? `$${(m/1000).toFixed(1)}B` : `$${Math.round(m)}M`;
 
-function getMarket(key: string, industry: string, forecast: MarketForecast): MarketResearch {
-  const base = md[key] || defaultMarket;
-  // keep the qualitative copy, but sync headline growth to the regression output
-  return { ...base, growth_rate: `${(forecast.cagr * 100).toFixed(1)}% CAGR (modeled)` };
+function getMarket(mkt: MarketContext, forecast: MarketForecast): MarketResearch {
+  const c = mkt.country, sec = mkt.sector;
+  const capture = capBand(mkt.competition);
+  const viable = mkt.sam_m >= 120 && mkt.competition !== 'High';
+  return {
+    tam: usd(mkt.regional_tam_b * 1000),
+    sam: usd(mkt.sam_m),
+    som: usd(mkt.som_m),
+    som_explanation: `Serviceable market of ${usd(mkt.sam_m)} in ${c.name}, with ${mkt.competition.toLowerCase()} competition implying a ${capture.toLowerCase()} realistic capture — roughly ${usd(mkt.som_m)} obtainable over five years.`,
+    market_viable: viable,
+    capture_potential: capture,
+    growth_rate: `${(forecast.cagr * 100).toFixed(1)}% CAGR (modeled)`,
+    competition: mkt.competition,
+    key_trends: sec.trends,
+    assessment: `${sec.label} in ${c.name}: a ${usd(mkt.regional_tam_b*1000)} addressable market growing ~${(forecast.cagr*100).toFixed(0)}%/yr. ${c.ecosystem} Competition is ${mkt.competition.toLowerCase()}${mkt.sectorConfidence!=='exact' ? ' (sector mapped to nearest reference — treat sizing as an estimate).' : '.'}`,
+  };
 }
 
-// ---- Macroeconomic analysis (kept from the original model) ----
-const mi: Record<string, MacroAnalysis> = {
-  Fintech: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Medium', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Fintech regulation is evolving rapidly — 12 regulatory updates in 2024 alone. This creates barriers to entry (positive for incumbents) but uncertainty for startups. 9.8% inflation impacts lending economics. Currency depreciation creates cross-border payment complexities but also demand for local fintech solutions.` },
-  HealthTech: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'High', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Medical software must comply with Ministry of Health certification and data localization (patient data on Uzbek servers). Budget allocations prioritize infrastructure over technology. Healthcare receives a small share of the $2.8B FDI inflow.` },
-  CyberSec: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'High', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `New laws require 24-hour incident reporting and certified security products — 6-12 month approval process creates a moat but also a barrier. Most budgets go to hardware (firewalls) not software platforms.` },
-  'AI/ML': { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Low', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `No specific AI laws — low barriers but no protection from global competition. 5.5% GDP growth and 3,000+ CS graduates/year are strong tailwinds. 9.8% inflation drives demand for cost-saving automation.` },
-  'E-commerce': { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Medium', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Import duties (15-30%) make cross-border expensive, benefiting local platforms. Young demographic (median age 29) is a tailwind. But 9.8% inflation directly reduces discretionary spending and e-commerce order volumes.` },
-  GovTech: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'High', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Government procurement involves complex bureaucracy, mandatory tenders, and 60-90 day payment terms. Data localization requires servers in Uzbekistan. The positive: dedicated budget for digital transformation with specific allocations.` },
-  GreenTech: { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Low', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Strong policy tailwinds — renewable targets, green subsidies and international climate finance. Low regulatory friction for software layers, though hardware/energy projects face permitting and grid-connection timelines.` },
-};
-function defaultMacro(industry: string): MacroAnalysis {
-  return { gdp_growth: '5.5%', inflation: '9.8%', regulatory_risk: 'Medium', foreign_investment_trend: 'FDI up 23% YoY to $2.8B', currency_stability: 'UZS depreciated 8% vs USD in 2024', assessment: `Uzbekistan's 5.5% GDP growth is among the highest in the CIS, driven by liberalization, privatization, and growing FDI. Key risks: 9.8% inflation (above 8% target), 8% currency depreciation, and evolving regulation. For ${industry.toLowerCase()}, the most relevant factor is the government's digital transformation commitment.` };
-}
-function getMacro(key: string, industry: string): MacroAnalysis {
-  return mi[key] || defaultMacro(industry);
+// ---- Adaptive macro analysis — generated from the resolved country ----
+function getMacro(mkt: MarketContext): MacroAnalysis {
+  const c = mkt.country;
+  const regulatory_risk: 'Low'|'Medium'|'High' = c.regulatory_ease === 'High' ? 'Low' : c.regulatory_ease === 'Medium' ? 'Medium' : 'High';
+  return {
+    gdp_growth: `${c.gdp_growth}%`,
+    inflation: `${c.inflation}%`,
+    regulatory_risk,
+    foreign_investment_trend: c.fdi_trend,
+    currency_stability: c.fx_note,
+    market_name: c.name,
+    policy_rate: `${c.policy_rate}%`,
+    cost_of_capital: mkt.cost_of_capital,
+    follow_on_availability: c.capital_availability,
+    fx_risk: c.fx_risk,
+    assumptions: mkt.assumptions,
+    assessment: `${c.name}: ${c.gdp_growth}% GDP growth, ${c.inflation}% inflation, ${c.policy_rate}% policy rate (${mkt.cost_of_capital.toLowerCase()} cost of capital). ${c.fx_note}. Follow-on capital depth is ${c.capital_availability.toLowerCase()}. ${c.fdi_trend}.`,
+  };
 }
 
 function generateStartups(): Startup[] {
