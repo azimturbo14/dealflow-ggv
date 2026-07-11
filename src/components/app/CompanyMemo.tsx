@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import {
   ArrowLeft, ChevronDown, TrendingUp, CircleCheck, CircleX, TriangleAlert,
   Sparkles, ArrowRight, Users, LineChart, Wallet, Swords, ClipboardList,
-  FileText, Building2, Quote,
+  FileText, Building2, Quote, Target, Gauge,
 } from "lucide-react";
 import type { Startup, Pillar } from "@/lib/mock-data";
 import { VERDICT, fmtMoney0 } from "@/lib/format";
@@ -311,6 +311,63 @@ export function CompanyMemo({
               </Card>
             </MemoSection>
 
+            {/* Fund-thesis fit */}
+            <MemoSection
+              icon={Target}
+              num="01·"
+              title="Fund-thesis fit"
+              aside={
+                <Badge tone={s.thesis_fit.band === "on-thesis" ? "good" : s.thesis_fit.band === "off-thesis" ? "bad" : "warn"}>
+                  <span className="capitalize">{s.thesis_fit.band.replace("-", " ")}</span> · {s.thesis_fit.score}/100
+                </Badge>
+              }
+            >
+              <Card>
+                <div className="flex items-start gap-2.5">
+                  <Gauge className="w-4 h-4 text-ink-3 shrink-0 mt-0.5" />
+                  <p className="text-[13px] leading-relaxed text-ink-2">
+                    The <span className="font-medium text-ink">verdict combines company quality with fit to the fund&apos;s mandate</span>. {" "}
+                    {s.thesis_fit.gate === "hard-pass"
+                      ? "This deal falls outside the current mandate, so it is capped to PASS even if the fundamentals are strong — this mirrors how the fund actually passes on off-thesis deals."
+                      : s.thesis_fit.gate === "cap-review"
+                      ? "This deal is off the fund's core thesis, so a strong score is capped to REVIEW rather than PURSUE."
+                      : "No thesis conflicts — this deal is judged on company quality alone."}
+                  </p>
+                </div>
+
+                {/* thesis reasons */}
+                <ul className="mt-4 space-y-2">
+                  {s.thesis_fit.reasons.map((r, i) => (
+                    <li key={i} className="flex gap-2.5 text-[13px] leading-snug text-ink-2">
+                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mt-1.5", s.thesis_fit.gate === "none" ? "bg-good/70" : "bg-warn/70")} />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* thesis factors */}
+                <div className="mt-4 pt-4 border-t border-line-2 grid sm:grid-cols-2 gap-2.5">
+                  {s.thesis_fit.factors.map((f, i) => {
+                    const tone = f.impact > 0 ? "good" : f.impact < 0 ? "bad" : "ink-3";
+                    return (
+                      <div key={i} className="bg-canvas border border-line rounded-lg px-3 py-2.5 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="microlabel text-[9px]">{f.criterion}</div>
+                          <div className="text-[12px] font-medium text-ink truncate mt-0.5">{f.value}</div>
+                        </div>
+                        <span className={cn("font-mono text-xs font-semibold tabular shrink-0", tone === "good" ? "text-good" : tone === "bad" ? "text-bad" : "text-ink-3")}>
+                          {f.impact > 0 ? `+${f.impact}` : f.impact}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-[11px] text-ink-3 leading-relaxed">
+                  The mandate is derived from the fund&apos;s own historical pursue / pass decisions and can be edited as the thesis evolves.
+                </p>
+              </Card>
+            </MemoSection>
+
             {/* Founder assessment */}
             <MemoSection icon={Users} num="02" title="Founder assessment" aside={<span className="font-mono text-[12px] text-ink-3">{teamPillar.score}/{teamPillar.max}</span>}>
               <Card>
@@ -377,18 +434,16 @@ export function CompanyMemo({
               <Card>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <Stat label="Total funding" value={fmtMoney0(s.funding_total_usd)} />
-                  <Stat label="Ask" value={fmtMoney0(s.ask_amount_usd)} tone={s.ask_amount_usd >= 10000 && s.ask_amount_usd <= 1_000_000 ? "good" : s.ask_amount_usd > 1_000_000 ? "warn" : "ink"} />
+                  <Stat label="Ask" value={fmtMoney0(s.ask_amount_usd)} />
                   <Stat label="Round size" value={fmtMoney0(s.round_size_usd)} />
                   <Stat label="Revenue model" value={s.revenue_model} />
                   <Stat label="Months to funding" value={s.time_to_first_funding_months > 0 ? `${s.time_to_first_funding_months} mo` : "—"} />
                   <Stat label="Founded" value={String(s.founding_year)} />
                 </div>
                 <p className="mt-4 text-[12px] leading-relaxed text-ink-3">
-                  {s.ask_amount_usd >= 10000 && s.ask_amount_usd <= 1_000_000
-                    ? `The ${fmtMoney0(s.ask_amount_usd)} ask sits inside a typical $10K–$1M ticket — a clean fit for an early-stage mandate.`
-                    : s.ask_amount_usd > 1_000_000
-                    ? `The ${fmtMoney0(s.ask_amount_usd)} ask is above a typical early-stage ticket and may need syndication.`
-                    : "No ask was specified, so the round cannot yet be sized against a mandate."}
+                  {s.ask_amount_usd > 0
+                    ? `Raising ${fmtMoney0(s.ask_amount_usd)}${s.round_size_usd > s.ask_amount_usd ? ` on a ${fmtMoney0(s.round_size_usd)} round` : ""}. Size this against the fund's own ticket range before proceeding.`
+                    : "No ask was specified, so the round size isn't yet set against the fund's ticket range."}
                 </p>
               </Card>
             </MemoSection>
@@ -472,14 +527,27 @@ export function CompanyMemo({
                   })}
                 </div>
                 <div className="mt-4 pt-4 border-t border-line-2">
-                  <SectionLabel className="mb-2">Macro context — {s.country}</SectionLabel>
+                  <SectionLabel className="mb-2">Macro context — {ma.market_name ?? s.country}</SectionLabel>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <Stat label="GDP growth" value={ma.gdp_growth} />
-                    <Stat label="Inflation" value={ma.inflation} tone="warn" />
+                    <Stat label="Inflation" value={ma.inflation} tone={parseFloat(ma.inflation) >= 20 ? "bad" : "warn"} />
+                    <Stat label="Policy rate" value={ma.policy_rate ?? "—"} sub={ma.cost_of_capital ? `${ma.cost_of_capital} cost of capital` : undefined} />
                     <Stat label="Reg. risk" value={ma.regulatory_risk} tone={ma.regulatory_risk === "Low" ? "good" : ma.regulatory_risk === "High" ? "bad" : "warn"} />
-                    <Stat label="FDI" value="Up 23%" tone="good" />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <Stat label="FX risk" value={ma.fx_risk ?? "—"} tone={ma.fx_risk === "Low" ? "good" : ma.fx_risk === "High" ? "bad" : "warn"} />
+                    <Stat label="Follow-on capital" value={ma.follow_on_availability ?? "—"} tone={ma.follow_on_availability === "High" ? "good" : ma.follow_on_availability === "Low" ? "bad" : "warn"} />
+                    <div className="col-span-2 bg-canvas border border-line rounded-lg px-3 py-2.5">
+                      <div className="microlabel text-[9px]">Capital / FDI trend</div>
+                      <div className="text-[12px] font-medium text-ink mt-0.5 leading-snug">{ma.foreign_investment_trend}</div>
+                    </div>
                   </div>
                   <p className="mt-3 text-[12px] leading-relaxed text-ink-3">{ma.assessment}</p>
+                  {ma.assumptions && ma.assumptions.length > 0 && (
+                    <p className="mt-2 text-[11px] leading-relaxed text-ink-3 border-l-2 border-warn pl-2.5">
+                      <span className="font-medium">Assumptions:</span> {ma.assumptions.join(" ")}
+                    </p>
+                  )}
                 </div>
               </Card>
             </MemoSection>
@@ -492,7 +560,23 @@ export function CompanyMemo({
               <div className={cn("rounded-xl border p-5", v.ring, v.soft)}>
                 <SectionLabel className={v.text}>Recommendation</SectionLabel>
                 <div className={cn("text-2xl font-semibold tracking-tight mt-1.5", v.text)}>{v.action}</div>
-                <p className="text-[12px] text-ink-2 mt-1.5 leading-relaxed">{v.label} · {s.score}/100 · {s.confidence}% confidence</p>
+                <div className="mt-3.5 flex items-baseline gap-2">
+                  <span className={cn("font-mono text-3xl font-semibold tabular", v.text)}>{Math.round(s.pursuit_probability * 100)}%</span>
+                  <span className="text-[12px] text-ink-2 leading-snug">calibrated<br />pursue-probability</span>
+                </div>
+                <div className="mt-3 pt-3 border-t border-line-2 grid grid-cols-2 gap-y-1.5 gap-x-3 text-[11px]">
+                  <span className="text-ink-3">Quality score</span><span className="text-right font-mono font-medium text-ink tabular">{s.score}/100</span>
+                  <span className="text-ink-3">Thesis fit</span>
+                  <span className={cn("text-right font-medium capitalize", s.thesis_fit.band === "on-thesis" ? "text-good" : s.thesis_fit.band === "off-thesis" ? "text-bad" : "text-warn")}>{s.thesis_fit.band.replace("-", " ")}</span>
+                  <span className="text-ink-3">Data confidence</span><span className="text-right font-mono font-medium text-ink tabular">{s.confidence}%</span>
+                </div>
+                {s.thesis_fit.gate !== "none" && (
+                  <p className="mt-3 text-[11px] leading-relaxed text-ink-2 border-l-2 border-warn pl-2.5">
+                    {s.thesis_fit.gate === "hard-pass"
+                      ? "Off the fund's current mandate — capped to PASS regardless of company quality."
+                      : "Off the fund's core thesis — capped to REVIEW rather than PURSUE."}
+                  </p>
+                )}
               </div>
 
               {/* next steps */}
