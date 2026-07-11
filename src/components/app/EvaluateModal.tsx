@@ -14,13 +14,21 @@ import { parseStartupsFromFile, downloadCsvTemplate } from "@/lib/import";
 import { Button } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
 
-const COUNTRIES = ["Uzbekistan", "Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan", "Azerbaijan", "Russia", "United States", "United Kingdom", "Other"];
+// Countries with an exact macro/market profile in src/lib/markets.ts. Anything else
+// still works (the resolver falls back to a labeled regional/global estimate) but
+// these give the most accurate result.
+const COUNTRIES = [
+  "Saudi Arabia", "United Arab Emirates", "Qatar", "Oman", "Bahrain", "Kuwait",
+  "Jordan", "Egypt", "Morocco", "Turkey", "Israel",
+  "United States", "United Kingdom", "Germany", "Singapore", "India", "Pakistan",
+  "Indonesia", "Nigeria", "South Africa", "Canada", "Other",
+];
 const YEARS = Array.from({ length: 12 }, (_, i) => 2026 - i);
 
 const emptyForm = {
   name: "", industry: "AI/ML", custom_industry: "", stage: "Idea",
   is_b2b: true, team_size: 5, unique_tech: false, revenue_model: revenueModels[0],
-  founding_year: 2024, country: "Uzbekistan", description: "",
+  founding_year: 2024, country: "United Arab Emirates", description: "",
   ask_amount_usd: 0, round_size_usd: 0, previous_investment: false,
   founder_name: "", founder_role: "CEO / Founder", founder_background: "", successful_project: "",
   technical_cofounder: false,
@@ -109,7 +117,6 @@ export function EvaluateModal({ open, onClose, onCreate, nextId }: {
 
   const resolvedIndustry = form.industry === "Other" ? (form.custom_industry.trim() || "Other") : form.industry;
   const preview = buildForecast(resolvedIndustry);
-  const askOk = form.ask_amount_usd === 0 || (form.ask_amount_usd >= 10000 && form.ask_amount_usd <= 1_000_000);
 
   const runExtract = async (file: File | undefined | null, kind: "deck" | "financial") => {
     if (!file) return;
@@ -258,8 +265,8 @@ export function EvaluateModal({ open, onClose, onCreate, nextId }: {
                         {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </Field>
-                    <Field label="Ask ($)" htmlFor="ev-ask" hint={!askOk ? "Outside a typical $10K–$1M ticket" : undefined}>
-                      <input id="ev-ask" type="number" min={0} step={10000} className={cn(inputCls, !askOk && "border-warn")} placeholder="e.g. 300000" value={form.ask_amount_usd || ""} onChange={(e) => set({ ask_amount_usd: num(e.target.value) })} />
+                    <Field label="Ask ($)" htmlFor="ev-ask">
+                      <input id="ev-ask" type="number" min={0} step={10000} className={inputCls} placeholder="e.g. 300000" value={form.ask_amount_usd || ""} onChange={(e) => set({ ask_amount_usd: num(e.target.value) })} />
                     </Field>
                     <Field label="Round size ($)" htmlFor="ev-round">
                       <input id="ev-round" type="number" min={0} step={10000} className={inputCls} placeholder="e.g. 1000000" value={form.round_size_usd || ""} onChange={(e) => set({ round_size_usd: num(e.target.value) })} />
