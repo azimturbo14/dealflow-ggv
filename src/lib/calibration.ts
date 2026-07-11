@@ -44,6 +44,28 @@
 //     on only n=1 selected - still too thin to trust the PURSUE band's
 //     precision claim. Treat the calibrated probability as a RANKING aid, not
 //     a high-precision gate, until the cohort is materially larger.
+//
+//   *** REFIT - 2026-07 temporal-consistency audit (n unchanged: 13 pos + 19 neg) ***
+//   Added an as_of_date to every cohort record (the CRM's own "date of last
+//   email" on that deal - the best real proxy for "when the fund actually
+//   decided," since Streak doesn't export per-stage timestamps) and checked
+//   every record's cited sources against it. Found two genuine cases of
+//   temporal leakage - training inputs that described a LATER state of the
+//   company than what the fund could have known at decision time:
+//     - Lucidya: was using its 2025-07 $30M Series B ($37.1M total) even
+//       though the CRM's last-touch on this deal was 2024-12 - before that
+//       round existed. Corrected to the pre-round figures ($7.1M/2 rounds).
+//     - Kingpin: was using its 2025-11 $3.5M seed even though this deal was
+//       marked Passed back in 2024-04 - eighteen months before that round
+//       closed. Corrected funding to $0/0 rounds (the fund passed on an
+//       unfunded, likely pre-launch company, not a seed-funded one).
+//   Net effect: LOO-AUC moved 0.619 -> 0.63, in-sample rank AUC 0.71 -> 0.72 -
+//   a small improvement, consistent with (not proof of) the hypothesis that
+//   temporal leakage was adding noise. This was a targeted audit (checked
+//   every record's source-citation years against its as_of_date and fixed
+//   the two flagged), not an exhaustive re-verification of all 45 records'
+//   every field - remaining fields are only as temporally accurate as their
+//   original sourcing pass was.
 export interface Calibration {
   a: number;        // logistic slope on z = (score-50)/10
   b: number;        // logistic intercept
@@ -54,12 +76,12 @@ export interface Calibration {
 }
 
 export const CALIBRATION: Calibration = {
-  a: 1.028,
-  b: -0.111,
+  a: 1.076,
+  b: -0.081,
   reviewP: 0.50,
   pursueP: 0.80,
   fitN: { positives: 13, negatives: 19 },
-  looAuc: 0.62,
+  looAuc: 0.63,
 };
 
 /** Calibrated probability (0-1) that a deal is pursue-worthy on quality grounds. */
