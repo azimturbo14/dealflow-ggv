@@ -9,31 +9,41 @@
 // HOW IT WAS FIT (see src/data/menaCohort.ts):
 //   - Platt scaling (1-feature logistic regression, gradient descent) on the
 //     client's OWN labeled deals: positives = pursued, negatives = QUALITY
-//     passes (+ 1 'mixed'). Thesis/mandate passes are deliberately EXCLUDED
+//     passes (+ 'mixed'). Thesis/mandate passes are deliberately EXCLUDED
 //     here - they are handled by the thesis gate, not by company quality.
 //   - Coefficients below are the deployment fit on all quality-decidable deals.
 //   - HONEST PERFORMANCE is the leave-one-out estimate, NOT the in-sample fit:
-//       * quality-score rank separation (AUC), in-sample:        0.73
+//       * quality-score rank separation (AUC), in-sample:        0.71
 //       * leave-one-out AUC on the fitted probabilities:         0.62
 //
-//   *** REFIT LOG - 2026-07 batch (n: 13 pos + 6 neg -> 13 pos + 13 neg) ***
+//   *** REFIT LOG - 2026-07 batch #1 (n: 13 pos + 6 neg -> 13 pos + 13 neg) ***
 //   Adding 7 more researched quality-passed companies (Eighty6, Tweeq, CWallet,
 //   Kingpin, The F* Word, PIPRA, Droobi Smit) moved LOO-AUC from ~0.68 to 0.62 -
-//   DOWN, not up. Reporting this plainly rather than only keeping the better-
-//   looking number: it means the earlier 0.68 was itself an optimistic small-
-//   sample estimate that regressed toward a more honest value once more real
-//   negatives were added, and/or several new records mix a company's CURRENT
-//   (2026) team size / funding with what the fund actually saw at decision
-//   time (e.g. FairMoney's team_size=600 reflects today, not the deal-review
-//   moment) - noise a stricter "field must reflect state AT TIME OF CRM ENTRY"
-//   rule would likely remove. Do not revert to the old numbers just because
-//   they were higher - re-fit again as the cohort grows, and prioritize fixing
-//   the temporal-consistency issue over adding more volume with the same flaw.
+//   DOWN, not up. Reported plainly rather than only keeping the better-looking
+//   number: it meant the earlier 0.68 was itself an optimistic small-sample
+//   estimate.
+//
+//   *** REFIT LOG - 2026-07 batch #2 (n: 13 pos + 13 neg -> 13 pos + 19 neg) ***
+//   Added 6 more researched quality-passed companies (Teammates.ai, Cleveric
+//   Solutions, ClearExhaust, Gwala, Jumlaty, MindTales) plus 3 thesis-passed
+//   companies used only for the thesis-gate test set (Sadeem, Nomu Group,
+//   tRetail Labs - the last one usefully triggers the new geographic gate on
+//   a real deal, see thesis.ts). LOO-AUC moved from 0.62 to 0.619 - i.e. FLAT,
+//   not a further decline. This is the first evidence the metric may be
+//   stabilizing in the low-0.6s rather than continuing to erode as n grows,
+//   but one flat data point is not a trend yet - the honest read is "no
+//   longer falling, not yet confirmed to be reliable." Do not read 0.6x as
+//   good; it is barely better than a coin flip and should stay a ranking aid,
+//   not a gate, until it clears the ~0.75+ bar with n>=30 quality-decidable
+//   negatives (currently 19) the same way the rest of this project insists on
+//   for the broader scoring model. The temporal-consistency issue flagged in
+//   batch #1 (fields reflecting today vs. deal-review time) has NOT been
+//   fixed yet and remains a likely source of noise in both directions.
 //   - Thresholds are unchanged from the original convention (0.50/0.80); LOO
-//     precision at P>=0.80 is now only 0.5 on n=2 selected - too thin to trust
-//     the PURSUE band's precision claim right now. Treat the calibrated
-//     probability as a RANKING aid, not a high-precision gate, until the
-//     cohort is materially larger.
+//     precision at P>=0.50 is 0.70 (n=10 selected) and at P>=0.80 is 1.0 but
+//     on only n=1 selected - still too thin to trust the PURSUE band's
+//     precision claim. Treat the calibrated probability as a RANKING aid, not
+//     a high-precision gate, until the cohort is materially larger.
 export interface Calibration {
   a: number;        // logistic slope on z = (score-50)/10
   b: number;        // logistic intercept
@@ -44,11 +54,11 @@ export interface Calibration {
 }
 
 export const CALIBRATION: Calibration = {
-  a: 1.009,
-  b: 0.273,
+  a: 1.028,
+  b: -0.111,
   reviewP: 0.50,
   pursueP: 0.80,
-  fitN: { positives: 13, negatives: 13 },
+  fitN: { positives: 13, negatives: 19 },
   looAuc: 0.62,
 };
 
