@@ -1,5 +1,6 @@
 import { resolveMarket, type MarketContext, type Band } from './markets';
 import { assessThesisFit, MENA_CLIENT_THESIS, type ThesisFit } from './thesis';
+import { pursuitProbability, baseVerdictFromProbability } from './calibration';
 
 export interface MarketResearch {
   tam: string;
@@ -89,6 +90,7 @@ export interface Startup {
   previous_investment: boolean;
   // scoring output
   score: number;             // 0–100 company quality (thesis-independent)
+  pursuit_probability: number; // 0–1 calibrated P(pursue-worthy) from the quality score
   verdict: "high" | "moderate" | "low"; // pursue / review / pass — quality AND thesis fit
   thesis_fit: ThesisFit;     // how the deal matches this fund's mandate
   confidence: number; // 0–100, how much of the scoring data was actually provided
@@ -492,8 +494,10 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
   ];
   const raw = teamScore + tracScore + mktScore + macroScore;
   const score = clamp(Math.round(raw + jitter), 5, 99);
-  // Quality verdict from the score alone …
-  const qualityVerdict: "high" | "moderate" | "low" = score >= 70 ? "high" : score >= 45 ? "moderate" : "low";
+  // Calibrated probability of being pursue-worthy (fit on the client's own decisions) …
+  const pursuit_probability = pursuitProbability(score);
+  // … and the quality verdict derived from it (before thesis gating).
+  const qualityVerdict: "high" | "moderate" | "low" = baseVerdictFromProbability(pursuit_probability);
 
   // … then thesis fit decides whether a good company is one this fund actually pursues.
   const thesis_fit = assessThesisFit({
@@ -555,8 +559,9 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
     : thesis_fit.gate === 'cap-review' && qualityVerdict === 'high'
       ? ' — capped to REVIEW (strong company, off current thesis)'
       : '';
+  decision_path.push(`Calibrated pursue-probability → ${Math.round(pursuit_probability * 100)}% (quality ${score}/100)`);
   decision_path.push(`Thesis fit → ${thesis_fit.band} (${thesis_fit.score}/100)`);
-  decision_path.push(`→ ${verdict === 'high' ? 'PURSUE' : verdict === 'moderate' ? 'REVIEW' : 'PASS'} (${score}%)${gateNote}`);
+  decision_path.push(`→ ${verdict === 'high' ? 'PURSUE' : verdict === 'moderate' ? 'REVIEW' : 'PASS'}${gateNote}`);
 
   // Risks
   const risks: string[] = [];
@@ -594,6 +599,7 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
     round_size_usd: round_size,
     previous_investment,
     score,
+    pursuit_probability,
     verdict,
     thesis_fit,
     confidence,
