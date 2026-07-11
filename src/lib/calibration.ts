@@ -45,6 +45,33 @@
 //     precision claim. Treat the calibrated probability as a RANKING aid, not
 //     a high-precision gate, until the cohort is materially larger.
 //
+//   *** REFIT - 2026-07 batch #3 (n: 13 pos + 19 neg -> 13 pos + 27 neg) ***
+//   Added 8 more quality-decidable companies (Qlub, Seez, Pemo, Finanshels,
+//   DarDoc, Rayyan Systems, NymCard, Koniku) plus 4 thesis-passed companies
+//   (Carry1st, Homzmart, Algbra, Dojah - all correctly triggered the
+//   geographic/consumer thesis gates). THIS TIME THE ANSWER IS CLEARER AND
+//   LESS GOOD: LOO-AUC dropped from 0.63 to 0.58 - a real decline, not noise
+//   around a stable value. In-sample rank AUC also fell, 0.72 -> 0.66.
+//   The likely cause is visible in the new records themselves: several of
+//   this batch's "quality" pass companies (Qlub, Rayyan Systems, NymCard,
+//   Koniku) score as high or higher on the composite than several PURSUED
+//   deals, despite being labeled negatives - and their own sourcing notes
+//   say why: the most plausible pass reasons for several of them are
+//   stage/check-size mismatch, portfolio/competitive overlap with an
+//   existing position (e.g. Qlub/Pemo vs. this fund's EdfaPay), or timing -
+//   none of which are inputs this scoring model has ANY feature for. This is
+//   a more fundamental finding than the temporal-consistency issue: growing
+//   n is not obviously converging AUC toward a usable number, because a real
+//   share of this fund's "quality" passes may not be explained by company
+//   quality at all. Two honest paths forward: (a) keep growing n and see if
+//   this is itself noise that damps out, or (b) accept that "quality" vs
+//   "thesis" is an incomplete taxonomy and add a third inferred pass_kind
+//   for "fund-construction reasons" (check size, existing portfolio overlap,
+//   timing) that gets EXCLUDED from the quality-vs-pursued training contrast
+//   entirely, the same way thesis passes already are - option (b) has not
+//   been implemented, it is flagged here as the more promising fix to try
+//   before assuming more volume alone will help.
+//
 //   *** REFIT - 2026-07 temporal-consistency audit (n unchanged: 13 pos + 19 neg) ***
 //   Added an as_of_date to every cohort record (the CRM's own "date of last
 //   email" on that deal - the best real proxy for "when the fund actually
@@ -76,12 +103,12 @@ export interface Calibration {
 }
 
 export const CALIBRATION: Calibration = {
-  a: 1.076,
-  b: -0.081,
+  a: 0.826,
+  b: -0.586,
   reviewP: 0.50,
   pursueP: 0.80,
-  fitN: { positives: 13, negatives: 19 },
-  looAuc: 0.63,
+  fitN: { positives: 13, negatives: 27 },
+  looAuc: 0.58,
 };
 
 /** Calibrated probability (0-1) that a deal is pursue-worthy on quality grounds. */
