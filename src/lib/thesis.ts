@@ -13,6 +13,7 @@
 // editable config object — the client can tune it as their mandate shifts.
 
 import type { ScoreFactor } from './mock-data';
+import type { Region } from './markets';
 
 export type ThesisBand = 'on-thesis' | 'partial' | 'off-thesis';
 export type ThesisGate = 'none' | 'cap-review' | 'hard-pass';
@@ -25,6 +26,15 @@ export interface FundThesis {
   preferred_sectors: string[];               // canonical sector keys the fund actively wants
   avoid_sectors: string[];                    // canonical sectors the fund is out of
   avoid_keywords: string[];                   // narrow verticals explicitly passed on
+  // Geography gate - added after a 2026-07 cohort review found a strong,
+  // well-funded off-region deal (FairMoney, Nigeria) reading as a good
+  // quality fit with ZERO thesis penalty, because nothing checked geography
+  // at all. Evidence for this rule is thin (2 CRM data points: FairMoney/
+  // Sub-Saharan Africa and Bykea/Pakistan, both passed) - deliberately a
+  // 'cap-review' gate, not 'hard-pass', and flagged as tentative below.
+  // CONFIRM WITH THE DEAL TEAM before trusting this as settled policy.
+  core_regions: Region[];
+  geography_evidence_note: string;
   notes: string;
 }
 
@@ -37,6 +47,13 @@ export const MENA_CLIENT_THESIS: FundThesis = {
   preferred_sectors: ['FinTech', 'AI', 'SaaS', 'DeepTech', 'BioTech', 'HealthTech', 'CyberSec', 'RegTech', 'ClimateTech', 'SpaceTech', 'Robotics'],
   avoid_sectors: [],
   avoid_keywords: ['podcast', 'travel retail', 'femcare', 'dating'],
+  // Pursued deals in the cohort span GCC, Levant, North Africa, MENA-other
+  // AND North America (several US deep-tech deals: Invisible Technologies,
+  // CIQ, Antaris Space, BioSapien, XScape Photonics) - so "MENA-only" would
+  // be wrong. Sub-Saharan Africa and South Asia are the two regions with
+  // passed deals and zero pursued ones so far.
+  core_regions: ['GCC', 'Levant', 'North Africa', 'MENA-other', 'North America', 'Europe'],
+  geography_evidence_note: 'Tentative - based on only 2 off-core-region CRM data points (FairMoney/Sub-Saharan Africa, Bykea/South Asia), both passed. Not enough evidence to hard-gate; confirm with the deal team whether geography is really a mandate boundary or those 2 passes were coincidentally also B2C/quality passes for other reasons.',
   notes: 'Pursued deals cluster in B2B FinTech/AI/SaaS/DeepTech/BioTech at Series A+. B2C explicitly deprioritized ("not actively investing in B2C"); "too early" and "no defensible moat / business model" are recurring quality-adjacent pass reasons; several niche consumer verticals passed outright.',
 };
 
@@ -50,6 +67,7 @@ export interface ThesisInput {
   sector_key: string;
   industry: string;
   description?: string;
+  region?: Region;
 }
 
 export interface ThesisFit {
@@ -155,6 +173,21 @@ export function assessThesisFit(input: ThesisInput, thesis: FundThesis = MENA_CL
       value: 'No stated moat',
       impact: -12, max_impact: 0, direction: 'negative',
       explanation: 'A recurring pass reason for this fund is weak defensibility ("no defense against competition", "no defendable business model").',
+    });
+  }
+
+  // 6) Geography vs. core regions - see the "geography_evidence_note" on the
+  // thesis object for how thin the evidence for this rule still is. Deliberately
+  // cap-review, never hard-pass, until there's more than 2 data points behind it.
+  if (input.region && !thesis.core_regions.includes(input.region)) {
+    score -= 15;
+    gate = stronger(gate, 'cap-review');
+    reasons.push(`${input.region} is outside the fund's core regions so far (${thesis.core_regions.join(', ')}) - tentative signal, confirm with the deal team.`);
+    factors.push({
+      criterion: 'Geography vs. core regions',
+      value: `${input.region} — outside observed core regions`,
+      impact: -15, max_impact: 0, direction: 'negative',
+      explanation: `No pursued deal in this fund's history so far has come from ${input.region}. This is a THIN, tentative signal (only 2 supporting data points) rather than a confirmed mandate boundary - treat as a prompt to double-check geographic fit, not an automatic pass.`,
     });
   }
 

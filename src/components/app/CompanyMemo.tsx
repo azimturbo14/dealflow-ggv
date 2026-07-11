@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { Startup, Pillar } from "@/lib/mock-data";
 import { VERDICT, fmtMoney0 } from "@/lib/format";
+import { CALIBRATION } from "@/lib/calibration";
 import {
   Card, VerdictBadge, ScoreRing, Meter, ConfidenceMeter, SectionLabel, Badge, Button,
 } from "@/components/app/primitives";
@@ -570,6 +571,13 @@ export function CompanyMemo({
                   <span className={cn("text-right font-medium capitalize", s.thesis_fit.band === "on-thesis" ? "text-good" : s.thesis_fit.band === "off-thesis" ? "text-bad" : "text-warn")}>{s.thesis_fit.band.replace("-", " ")}</span>
                   <span className="text-ink-3">Data confidence</span><span className="text-right font-mono font-medium text-ink tabular">{s.confidence}%</span>
                 </div>
+                <p className="mt-3 text-[10.5px] leading-relaxed text-ink-3 border-l-2 border-line-2 pl-2.5">
+                  Calibrated on {CALIBRATION.fitN.positives + CALIBRATION.fitN.negatives} historical decisions
+                  ({CALIBRATION.fitN.positives} pursued, {CALIBRATION.fitN.negatives} passed) · leave-one-out AUC{" "}
+                  {CALIBRATION.looAuc.toFixed(2)}. Treat this probability as a <strong>ranking aid to prioritize
+                  review</strong>, not a precision gate — the sample is still small and the positive class (deals
+                  this fund has actually advanced) is structurally limited.
+                </p>
                 {s.thesis_fit.gate !== "none" && (
                   <p className="mt-3 text-[11px] leading-relaxed text-ink-2 border-l-2 border-warn pl-2.5">
                     {s.thesis_fit.gate === "hard-pass"
