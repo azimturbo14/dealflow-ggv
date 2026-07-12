@@ -155,6 +155,39 @@
 //   than just adding any real company, is the more promising lever than
 //   volume alone. Still well short of the ~0.75+ bar this project has set
 //   before treating the calibrated probability as more than a ranking aid.
+//   *** REFIT - 2026-07 batch #6 (n: 13 pos + 28 neg -> 13 pos + 35 neg) ***
+//   Added 7 more real, sourced quality-driven passes, continuing the
+//   targeted approach from batch #5 rather than adding any real company:
+//   Medex Cart (Turkey, real HQ vs. Saudi CRM tag - no funding after ~4yrs,
+//   no founders found), Claimkit (Oman - tiny ~$100K round, and the Oman
+//   Startup Hub directory now lists it "Inactive", a likely deadpool signal
+//   the same way QX Lab AI was later confirmed deadpooled elsewhere in this
+//   cohort), eMed Support Systems (Dubai - unfunded, no traction found),
+//   Cassbana (real HQ Egypt vs. Oman CRM tag - raised ~$1M pre-seed but
+//   CONFIRMED shut down in July 2024, a stale CRM record on an already-
+//   failed company), Hollat (Saudi - only a $133K seed, generic CRM/
+//   ticketing SaaS), OasisX (Dubai - CRM mislabels this an "E-Commerce"
+//   deal when it is actually an NFT/web3 marketplace; unconfirmed funding,
+//   no coverage since the 2022-23 NFT-market collapse, status uncertain),
+//   Growa AI (Qatar - genuine visibility, no matching funding after two
+//   Web Summit Qatar appearances). All 7 composite scores landed 36-48,
+//   well below the pursued range, consistent with (not assumed into) the
+//   quality-pass label. Also skipped 5 more researched candidates as too
+//   ambiguous or strong to responsibly force into any pass_kind: One
+//   Loyalty and Doc32 (no verifiable match to the CRM company at all),
+//   ajil (identity-collision risk with an unrelated similarly-named
+//   company), Qanooni AI and Holo (both well-funded, credible, traction-
+//   positive companies with no clear evidence of a fund-construction or
+//   thesis reason for the pass - forcing a "quality" label on either would
+//   be reaching for excuses, the same discipline applied in batch #3b).
+//   Result: LOO-AUC moved 0.63 -> 0.68, in-sample rank AUC 0.72 -> 0.74 -
+//   a second consecutive real improvement, now two data points in a row
+//   supporting (not yet proving) the working theory that hunting
+//   specifically for genuinely quality-driven passes is a more effective
+//   lever than volume alone. Still below the ~0.75+ bar this project has
+//   set before treating the calibrated probability as more than a ranking
+//   aid - close enough now that it is worth treating as the next concrete
+//   milestone rather than an open-ended target.
 export interface Calibration {
   a: number;        // logistic slope on z = (score-50)/10
   b: number;        // logistic intercept
@@ -205,12 +238,12 @@ export interface Calibration {
 // decision - not an automatic one.
 
 export const CALIBRATION: Calibration = {
-  a: 0.849,
-  b: -0.505,
+  a: 0.985,
+  b: -0.636,
   reviewP: 0.50,
   pursueP: 0.80,
-  fitN: { positives: 13, negatives: 28 },
-  looAuc: 0.63,
+  fitN: { positives: 13, negatives: 35 },
+  looAuc: 0.68,
 };
 
 /** Calibrated probability (0-1) that a deal is pursue-worthy on quality grounds. */
