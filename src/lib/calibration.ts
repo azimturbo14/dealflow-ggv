@@ -133,6 +133,28 @@
 //   quality-decidable cohort (still 37) remains the bottleneck for moving
 //   LOO-AUC off its current 0.58-0.63 plateau - see task "grow negative-
 //   class cohort toward n=60-80 quality-decidable" for next steps.
+//   *** REFIT - 2026-07 batch #5 (n: 13 pos + 24 neg -> 13 pos + 28 neg) ***
+//   Added 6 more real, sourced companies specifically targeting the
+//   quality-decidable bottleneck flagged in batch #4's honest non-result:
+//   4 genuine quality-driven passes (eBinaa, Banxx, 0brokers, Tatami - all
+//   on-geography, real, but thin-to-no institutional funding/traction after
+//   meaningful time in market) plus 2 more thesis/off-geography passes
+//   (Amplifier Health - Canada, no MENA nexus despite a Qatar CRM tag;
+//   Getly - Nigeria HQ, Qatar is a go-to-market channel not headquarters).
+//   Composite scores for the 4 new quality passes (28-41) landed well below
+//   the pursued range, consistent with the quality-pass hypothesis rather
+//   than reaching for a label. Result: LOO-AUC moved 0.59 -> 0.63, in-sample
+//   rank AUC 0.68 -> 0.72 - the first clear IMPROVEMENT (not just a flat or
+//   declining read) since the batch #3 decline. Read this cautiously: it is
+//   one additional data point on a metric that has bounced between 0.58 and
+//   0.68 across five refits on a base of well under 50 quality-decidable
+//   records, not yet confirmation of a real trend. It IS the first result
+//   consistent with the working theory from batch #3b/#4 - that the
+//   fund_construction taxonomy fix plus deliberately hunting for genuinely
+//   quality-driven (not thesis- or fund-construction-driven) passes, rather
+//   than just adding any real company, is the more promising lever than
+//   volume alone. Still well short of the ~0.75+ bar this project has set
+//   before treating the calibrated probability as more than a ranking aid.
 export interface Calibration {
   a: number;        // logistic slope on z = (score-50)/10
   b: number;        // logistic intercept
@@ -183,12 +205,12 @@ export interface Calibration {
 // decision - not an automatic one.
 
 export const CALIBRATION: Calibration = {
-  a: 0.877,
-  b: -0.430,
+  a: 0.849,
+  b: -0.505,
   reviewP: 0.50,
   pursueP: 0.80,
-  fitN: { positives: 13, negatives: 24 },
-  looAuc: 0.59,
+  fitN: { positives: 13, negatives: 28 },
+  looAuc: 0.63,
 };
 
 /** Calibrated probability (0-1) that a deal is pursue-worthy on quality grounds. */
