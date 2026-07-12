@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Cohort Score Distribution > score distribution snapshot 1`] = `
+{
+  "max": 61,
+  "mean": 26.2,
+  "median": 27,
+  "min": 9,
+  "n": 76,
+  "sd": 10.2,
+}
+`;

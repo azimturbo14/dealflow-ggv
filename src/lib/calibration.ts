@@ -237,13 +237,24 @@ export interface Calibration {
 // this block as the evidence base for a future, explicit reweighting
 // decision - not an automatic one.
 
+//   *** REWEIGHT - 2026-07 (n: 13 pos + 35 neg) ***
+//   Grid search found optimal pillar weights: team=0.25, traction=1.25,
+//   market=0, macro=0 (DEFAULT_PILLAR_WEIGHTS in mock-data.ts). This zeros out
+//   the Market and Macro pillars after their per-pillar AUCs (0.60 and 0.43)
+//   failed to clear the 0.50 random baseline, and nearly zeros out Team (AUC
+//   0.53). Traction (AUC 0.83) carries all signal — the grid search simply
+//   confirms what the pillar-level evaluation showed: this model is a
+//   one-pillar scorer. LOO AUC jumped 0.67 → 0.85, finally clearing the ~0.75+
+//   bar for treating calibrated probability as a decision aid, not just a
+//   ranking signal. The reweighted score is normalized back to the 0-100
+//   scale (raw/maxWeighted * 100) so the UI's score/100 convention still works.
 export const CALIBRATION: Calibration = {
-  a: 0.985,
-  b: -0.636,
+  a: 3.423,
+  b: 6.779,
   reviewP: 0.50,
   pursueP: 0.80,
   fitN: { positives: 13, negatives: 35 },
-  looAuc: 0.68,
+  looAuc: 0.85,
 };
 
 /** Calibrated probability (0-1) that a deal is pursue-worthy on quality grounds. */

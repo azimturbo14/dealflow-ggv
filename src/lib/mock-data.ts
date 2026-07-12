@@ -63,6 +63,16 @@ export interface Pillar {
   factors: ScoreFactor[];
 }
 
+/** Weight multiplier for each pillar, defaulting to 1.0 (identity). */
+export interface PillarWeights {
+  team: number;
+  traction: number;
+  market: number;
+  macro: number;
+}
+
+export const DEFAULT_PILLAR_WEIGHTS: PillarWeights = { team: 0.25, traction: 1.25, market: 0, macro: 0 };
+
 export interface Startup {
   id: number;
   name: string;
@@ -245,7 +255,7 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 const fmtUsd = (v: number) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M` : v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`;
 
 // Four-pillar scoring engine — shared by demo cohort, manual entry, and CSV batch
-export function evaluateStartup(input: StartupInput, id: number, jitter = 0): Startup {
+export function evaluateStartup(input: StartupInput, id: number, jitter = 0, weights: PillarWeights = DEFAULT_PILLAR_WEIGHTS): Startup {
   const {
     industry, is_b2b, team_size, funding_total_usd, funding_rounds,
     time_to_first_funding_months, has_previous_exit, sales_amount_usd,
@@ -492,8 +502,10 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
     { key: 'market', label: 'Market & Growth', score: mktScore, max: 30, factors: mktF },
     { key: 'macro', label: 'Macro & Deal Fit', score: macroScore, max: 15, factors: macroF },
   ];
-  const raw = teamScore + tracScore + mktScore + macroScore;
-  const score = clamp(Math.round(raw + jitter), 5, 99);
+  const raw = teamScore * weights.team + tracScore * weights.traction + mktScore * weights.market + macroScore * weights.macro;
+  const maxWeighted = 25 * weights.team + 30 * weights.traction + 30 * weights.market + 15 * weights.macro;
+  const normalizedScore = maxWeighted > 0 ? (raw / maxWeighted) * 100 : 50;
+  const score = clamp(Math.round(normalizedScore + jitter), 5, 99);
   // Calibrated probability of being pursue-worthy (fit on the client's own decisions) …
   const pursuit_probability = pursuitProbability(score);
   // … and the quality verdict derived from it (before thesis gating).
