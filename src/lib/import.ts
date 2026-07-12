@@ -23,6 +23,13 @@ const HEADER_ALIASES: Record<string, string[]> = {
   ask: ["ask_amount_usd", "ask", "ask_to_itpv", "raising"],
   round: ["round_size_usd", "round_size", "total_round_size"],
   founder: ["founder", "founder_name", "ceo"],
+  founderBg: ["founder_background", "background"],
+  proj: ["successful_project", "notable_project"],
+  techCof: ["technical_cofounder", "tech_cofounder"],
+  year: ["founding_year", "year_founded"],
+  sam: ["sam_usd", "sam"],
+  som: ["som_usd", "som"],
+  burn: ["monthly_burn_usd", "burn", "monthly_burn"],
   desc: ["description", "summary", "one_liner", "pitch"],
 };
 
@@ -52,7 +59,9 @@ function rowsToStartups(rows: string[][], startId: number): Startup[] {
     team: col("team"), tech: col("tech"), country: col("country"), fund: col("fund"),
     rounds: col("rounds"), time: col("time"), exit: col("exit"), prevInv: col("prevInv"),
     rev: col("rev"), growth: col("growth"), runway: col("runway"), ask: col("ask"),
-    round: col("round"), founder: col("founder"), desc: col("desc"),
+    round: col("round"), founder: col("founder"), founderBg: col("founderBg"),
+    proj: col("proj"), techCof: col("techCof"), year: col("year"),
+    sam: col("sam"), som: col("som"), burn: col("burn"), desc: col("desc"),
   };
 
   const cell = (cols: string[], i: number) =>
@@ -81,6 +90,13 @@ function rowsToStartups(rows: string[][], startId: number): Startup[] {
         ask_amount_usd: opt(cols, idx.ask),
         round_size_usd: opt(cols, idx.round),
         founder_name: cell(cols, idx.founder) || undefined,
+        founder_background: cell(cols, idx.founderBg) || undefined,
+        successful_project: cell(cols, idx.proj) || undefined,
+        technical_cofounder: idx.techCof >= 0 ? truthy(cell(cols, idx.techCof)) : undefined,
+        founding_year: opt(cols, idx.year),
+        sam_usd: opt(cols, idx.sam),
+        som_usd: opt(cols, idx.som),
+        monthly_burn_usd: opt(cols, idx.burn),
         description: cell(cols, idx.desc) || undefined,
       },
       startId + n
@@ -152,12 +168,12 @@ export async function parseStartupsFromFile(
 /* ---------- template + export ---------- */
 
 const TEMPLATE_HEADER =
-  "name,industry,business_model,stage,team_size,unique_tech,country,funding_total_usd,funding_rounds,time_to_first_funding_months,has_previous_exit,previous_investment,sales_amount_usd,revenue_growth_pct,runway_months,ask_amount_usd,round_size_usd";
+  "name,industry,business_model,stage,team_size,unique_tech,country,funding_total_usd,funding_rounds,time_to_first_funding_months,has_previous_exit,previous_investment,sales_amount_usd,revenue_growth_pct,runway_months,ask_amount_usd,round_size_usd,founder_background,successful_project,technical_cofounder,founding_year,sam_usd,som_usd,monthly_burn_usd";
 
 const TEMPLATE_ROWS = [
-  "Helios Robotics,DeepTech,B2B,MVP,8,yes,Uzbekistan,450000,2,7,no,yes,25000,18,14,300000,800000",
-  "Cadence Fintech,Fintech,B2B,Launched,12,no,Uzbekistan,1200000,3,5,yes,yes,180000,24,10,750000,2000000",
-  "Verdant AgriTech,AgriTech,B2B,Growth,6,yes,Kazakhstan,220000,1,9,no,yes,60000,12,16,200000,500000",
+  "Helios Robotics,DeepTech,B2B,MVP,8,yes,Uzbekistan,450000,2,7,no,yes,25000,18,14,300000,800000,Ex-Google 2 prior startups,Launched MVP with 100+ users,yes,2023,500,50,35000",
+  "Cadence Fintech,Fintech,B2B,Launched,12,no,Uzbekistan,1200000,3,5,yes,yes,180000,24,10,750000,2000000,,,no,2022,800,,120000",
+  "Verdant AgriTech,AgriTech,B2B,Growth,6,yes,Kazakhstan,220000,1,9,no,yes,60000,12,16,200000,500000,10 yrs agri-robotics R&D,Patented crop-sensing array,yes,2021,300,30,18000",
 ];
 
 function downloadBlob(content: string, filename: string, type = "text/csv") {
