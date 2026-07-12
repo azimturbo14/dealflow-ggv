@@ -13,7 +13,19 @@
 import type { StartupInput } from '@/lib/mock-data';
 
 export type ActualOutcome = 'pursued' | 'passed';
-export type PassKind = 'thesis' | 'quality' | 'mixed' | 'n/a';
+export type PassKind = 'thesis' | 'quality' | 'mixed' | 'fund_construction' | 'n/a';
+// 'fund_construction': the deal looks strong on Team/Traction/Financing and
+// doesn't cleanly fail sector/B2C/geography mandate fit (thesis) or read as
+// too-early/thin-scale (quality) either - the more plausible explanation is
+// a reason this scoring model has NO feature for at all: check-size/stage
+// mismatch (the round is bigger than this fund's typical ownership target),
+// portfolio-construction overlap (the fund already has a similar position),
+// or timing. Added 2026-07 batch #3 after several "quality (ambiguous close
+// call)" labels turned out to be actively hurting calibration - see
+// calibration.ts's REFIT LOG. EXCLUDED from the quality-vs-pursued training
+// contrast, the same way 'thesis' already is, because including it was
+// mislabeling deals the model was never going to be able to explain as
+// company-quality failures.
 
 export type ReasonBasis = 'client_stated' | 'inferred_from_thesis_rubric';
 
@@ -398,11 +410,11 @@ export const MENA_COHORT: CohortRecord[] = [
   },
   {
     input: { name: 'Qlub', industry: 'FinTech', country: 'United Arab Emirates', is_b2b: true, team_size: 150, funding_total_usd: 42_000_000, funding_rounds: 2, time_to_first_funding_months: 12, has_previous_exit: false, sales_amount_usd: 0, unique_tech: true, technical_cofounder: true, stage: 'Scaling', founding_year: 2021 },
-    actual_outcome: 'passed', pass_kind: 'quality', reason_basis: 'inferred_from_thesis_rubric',
+    actual_outcome: 'passed', pass_kind: 'fund_construction', reason_basis: 'inferred_from_thesis_rubric',
     est_fields: ['team_size', 'technical_cofounder', 'has_previous_exit'],
     as_of_date: '2024-06-07',
     sources: ['MENAbytes 2022 $17M seed', 'MENAbytes 2025-07 $30M Series B (post-decision, see note)', 'Wamda funding history'],
-    note: 'QR-based restaurant payments platform, deployed across thousands of venues globally; on-thesis sector (FinTech) and geography (UAE). TEMPORAL CARE: this deal\'s CRM last-touch is 2024-06-07 - well before the 2025-07 $30M Series B ($72M total) - so funding_total_usd/funding_rounds use only the pre-anchor $17M(2022)+$25M(2023)=$42M/2 rounds, not the later-and-larger total. Classified quality (ambiguous): no CRM reason text; the most plausible read is a stage/round-size mismatch (Series-B-scale payments infra may be beyond a smaller MENA fund\'s typical check/ownership target) rather than an obvious quality gap, given how strong the company otherwise looks - flagged as a close call worth double-checking with the deal team.',
+    note: 'QR-based restaurant payments platform, deployed across thousands of venues globally; on-thesis sector (FinTech) and geography (UAE). TEMPORAL CARE: this deal\'s CRM last-touch is 2024-06-07 - well before the 2025-07 $30M Series B ($72M total) - so funding_total_usd/funding_rounds use only the pre-anchor $17M(2022)+$25M(2023)=$42M/2 rounds, not the later-and-larger total. RECLASSIFIED 2026-07 (was \'quality\'): no CRM reason text; the most plausible read is a stage/round-size mismatch (Series-B-scale payments infra is likely beyond a smaller MENA fund\'s typical check/ownership target) - not a company-quality gap at all, so moved to fund_construction and excluded from the quality-vs-pursued training contrast rather than mislabeling a check-size decision as a quality failure.',
   },
   {
     input: { name: 'Carry1st', industry: 'Gaming', country: 'South Africa', is_b2b: false, team_size: 100, funding_total_usd: 53_000_000, funding_rounds: 3, time_to_first_funding_months: 36, has_previous_exit: false, sales_amount_usd: 0, unique_tech: false, technical_cofounder: true, stage: 'Scaling', founding_year: 2018 },
@@ -438,11 +450,11 @@ export const MENA_COHORT: CohortRecord[] = [
   },
   {
     input: { name: 'Pemo', industry: 'FinTech', country: 'United Arab Emirates', is_b2b: true, team_size: 60, funding_total_usd: 19_000_000, funding_rounds: 2, time_to_first_funding_months: 12, has_previous_exit: false, sales_amount_usd: 0, unique_tech: true, technical_cofounder: true, stage: 'Growth', founding_year: 2021 },
-    actual_outcome: 'passed', pass_kind: 'quality', reason_basis: 'inferred_from_thesis_rubric',
+    actual_outcome: 'passed', pass_kind: 'fund_construction', reason_basis: 'inferred_from_thesis_rubric',
     est_fields: ['time_to_first_funding_months', 'founding_year', 'technical_cofounder', 'has_previous_exit'],
     as_of_date: '2025-11-23',
     sources: ['BusinessWire 2022 $12M seed', 'FinSMEs 2024-11 $7M pre-Series A'],
-    note: 'B2B spend-management/corporate-card platform for MENAP SMEs; $19M raised (both rounds pre-anchor), 60+ team, processing ~$380M annualized across 4,000+ companies - a strong on-thesis (B2B FinTech, UAE) company. Co-founders are described as having "collectively launched or scaled" Zalora and Pleo, but the source does not attribute a personal founding-and-exit to any named Pemo co-founder specifically (could be an operating/scaling role rather than founder) - kept has_previous_exit=false rather than crediting an unconfirmed exit. Classified quality (ambiguous close call): no CRM reason text and no obvious quality gap found; possibly a stage/check-size mismatch similar to Qlub above, or competitive overlap with this fund\'s existing EdfaPay position.',
+    note: 'B2B spend-management/corporate-card platform for MENAP SMEs; $19M raised (both rounds pre-anchor), 60+ team, processing ~$380M annualized across 4,000+ companies - a strong on-thesis (B2B FinTech, UAE) company. Co-founders are described as having "collectively launched or scaled" Zalora and Pleo, but the source does not attribute a personal founding-and-exit to any named Pemo co-founder specifically (could be an operating/scaling role rather than founder) - kept has_previous_exit=false rather than crediting an unconfirmed exit. RECLASSIFIED 2026-07 (was \'quality\'): no CRM reason text and no obvious quality gap found; the more plausible read is a stage/check-size mismatch (same pattern as Qlub above) or competitive-overlap with this fund\'s existing EdfaPay position - moved to fund_construction rather than mislabeling either of those as a quality failure.',
   },
   {
     input: { name: 'Finanshels', industry: 'B2B SaaS', country: 'United Arab Emirates', is_b2b: true, team_size: 18, funding_total_usd: 0, funding_rounds: 1, time_to_first_funding_months: 6, has_previous_exit: false, sales_amount_usd: 0, unique_tech: false, technical_cofounder: false, stage: 'Launched', founding_year: 2022 },
@@ -478,11 +490,11 @@ export const MENA_COHORT: CohortRecord[] = [
   },
   {
     input: { name: 'NymCard', industry: 'FinTech', country: 'United Arab Emirates', is_b2b: true, team_size: 130, funding_total_usd: 22_500_000, funding_rounds: 1, time_to_first_funding_months: 18, has_previous_exit: false, sales_amount_usd: 0, unique_tech: true, technical_cofounder: true, stage: 'Scaling', founding_year: 2018 },
-    actual_outcome: 'passed', pass_kind: 'quality', reason_basis: 'inferred_from_thesis_rubric',
+    actual_outcome: 'passed', pass_kind: 'fund_construction', reason_basis: 'inferred_from_thesis_rubric',
     est_fields: ['team_size', 'time_to_first_funding_months', 'technical_cofounder', 'has_previous_exit'],
     as_of_date: '2024-11-13',
     sources: ['Wamda 2022 $22.5M funding round', 'IDENTITY CAVEAT: CRM box title is "IDVerse / NymCard" (single merged row, co_0576) - treated as a candidate match to NymCard only, not a confirmed identity, per this project\'s "unconfirmed identity" convention (see CIQ elsewhere in this cohort)'],
-    note: 'UAE embedded-finance/payments infrastructure platform (nCore), Central Bank of UAE licensed; funding_total_usd uses ONLY the pre-anchor 2022 $22.5M round - a later $33M Series B (announced 2025-03, per QED Investors coverage) happened AFTER this deal\'s 2024-11 CRM last-touch and is excluded as temporal leakage. IDENTITY CAVEAT: the CRM box for this deal is literally titled "IDVerse / NymCard" - it is not fully certain this deal is actually about NymCard (vs. IDVerse, an unrelated Australian identity-verification company, or some joint intro) rather than a confident match; treat this record with more skepticism than the others in this cohort. Classified quality (ambiguous close call) rather than thesis given how strong NymCard itself looks on-paper - possibly a stage/check-size mismatch, or this may not even be the same deal.',
+    note: 'UAE embedded-finance/payments infrastructure platform (nCore), Central Bank of UAE licensed; funding_total_usd uses ONLY the pre-anchor 2022 $22.5M round - a later $33M Series B (announced 2025-03, per QED Investors coverage) happened AFTER this deal\'s 2024-11 CRM last-touch and is excluded as temporal leakage. IDENTITY CAVEAT: the CRM box for this deal is literally titled "IDVerse / NymCard" - it is not fully certain this deal is actually about NymCard (vs. IDVerse, an unrelated Australian identity-verification company, or some joint intro) rather than a confident match; treat this record with more skepticism than the others in this cohort. RECLASSIFIED 2026-07 (was \'quality\'): given how strong NymCard itself looks on-paper, a stage/check-size mismatch is the more plausible read than a quality failure - moved to fund_construction. The identity caveat above stands independently either way.',
   },
   {
     input: { name: 'Koniku', industry: 'Deeptech', country: 'United States', is_b2b: true, team_size: 25, funding_total_usd: 46_500_000, funding_rounds: 2, time_to_first_funding_months: 24, has_previous_exit: false, sales_amount_usd: 0, unique_tech: true, technical_cofounder: true, stage: 'Growth', founding_year: 2015 },

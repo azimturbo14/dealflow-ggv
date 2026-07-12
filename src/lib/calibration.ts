@@ -45,6 +45,30 @@
 //     precision claim. Treat the calibrated probability as a RANKING aid, not
 //     a high-precision gate, until the cohort is materially larger.
 //
+//   *** REFIT - 2026-07 batch #3b: added 'fund_construction' pass_kind ***
+//   Reclassified 3 of batch #3's ambiguous "quality" companies (Qlub, Pemo,
+//   NymCard) to a new fund_construction pass_kind - see PassKind in
+//   menaCohort.ts - on the theory that their real pass reasons (check-size
+//   mismatch, portfolio overlap with EdfaPay, timing) aren't company-quality
+//   failures and shouldn't be trained against as if they were. Result: LOO-
+//   AUC moved 0.58 -> 0.59 - a small improvement, NOT the fix hoped for.
+//   Honest read: the reclassification hypothesis was partially right (three
+//   mislabeled records did hurt slightly) but does not explain most of the
+//   batch #3 decline - Rayyan Systems (score 57), Koniku (57), and Seez (44)
+//   are still labeled quality and still overlap heavily with pursued-deal
+//   scores, and reclassifying them too would be reaching for excuses rather
+//   than following evidence, since none of their notes cite a clear
+//   fund-construction reason the way Qlub/Pemo/NymCard's did. Net conclusion
+//   for this project: LOO-AUC in the 0.58-0.63 range across the last three
+//   refits should be read as "not yet distinguishable from noise around a
+//   mediocre value," not as a metric that is converging anywhere as n grows.
+//   The taxonomy fix helps a little; it is not a substitute for either (a)
+//   much more volume before re-testing this conclusion, or (b) accepting
+//   that composite_score's separation of quality-passes from pursued deals
+//   may genuinely be weak and re-examining which sub-scores carry any signal
+//   at all (see the FULL_EVALUATION_PLAN's per-sub-score AUC step - not yet
+//   run at meaningful scale).
+//
 //   *** REFIT - 2026-07 batch #3 (n: 13 pos + 19 neg -> 13 pos + 27 neg) ***
 //   Added 8 more quality-decidable companies (Qlub, Seez, Pemo, Finanshels,
 //   DarDoc, Rayyan Systems, NymCard, Koniku) plus 4 thesis-passed companies
@@ -103,12 +127,12 @@ export interface Calibration {
 }
 
 export const CALIBRATION: Calibration = {
-  a: 0.826,
-  b: -0.586,
+  a: 0.877,
+  b: -0.430,
   reviewP: 0.50,
   pursueP: 0.80,
-  fitN: { positives: 13, negatives: 27 },
-  looAuc: 0.58,
+  fitN: { positives: 13, negatives: 24 },
+  looAuc: 0.59,
 };
 
 /** Calibrated probability (0-1) that a deal is pursue-worthy on quality grounds. */
