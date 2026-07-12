@@ -126,6 +126,46 @@ export interface Calibration {
   looAuc: number;   // honest leave-one-out AUC
 }
 
+// *** PER-PILLAR EVALUATION - 2026-07 (n=37: 13 pursued + 24 quality-passed) ***
+// Ran the FULL_EVALUATION_PLAN's per-sub-score step (see the Python
+// enrichment project's evaluate.py for the original plan this mirrors) on
+// DealFlow's own 4 pillars, using each pillar's normalized (score/max) value
+// against the same pursued-vs-quality-passed label used above. Bootstrapped
+// 95% CIs (2000 resamples) to show how much these numbers should be trusted
+// at this sample size:
+//   Traction & Financials:  AUC 0.83  [0.68, 0.94] - the ONLY pillar whose
+//                            CI clears 0.50. This pillar is carrying almost
+//                            all of the composite's real signal.
+//   Market:                  AUC 0.60  [0.39, 0.78] - CI includes 0.50, not
+//                            distinguishable from random yet.
+//   Team & Founder:          AUC 0.53  [0.36, 0.68] - same as a coin flip.
+//   Macro & Capital Env.:    AUC 0.43  [0.24, 0.61] - POINT ESTIMATE BELOW
+//                            0.50 (inversely correlated), though the CI still
+//                            straddles 0.50 so this is not yet a confident
+//                            "this pillar actively hurts" claim - but it is
+//                            certainly not helping, and deserves a skeptical
+//                            eye rather than the benefit of the doubt.
+// Composite AUC-ROC 0.68, PR-AUC 0.57 (base rate 0.35). A 5-quintile
+// calibration check shows a rough but NOT monotonic relationship between
+// score and advance-rate (Q1-Q3: 0.25/0.25/0.14, Q4-Q5: 0.57/0.57) - the top
+// two quintiles separate cleanly from the bottom three, but there is no
+// reliable ordering within either group yet.
+// Confidence-stratified check could NOT be run meaningfully: all but one of
+// the 37 records fall in a narrow 52-66 confidence band - the cohort simply
+// doesn't have enough high-confidence (well-enriched) records yet to compare
+// high vs low confidence subgroups. This is itself a finding: enrichment
+// DEPTH (not just company count) is a real gap - see task "run enrichment
+// pipeline at full CRM scale."
+// Practical takeaway: Team & Macro pillars currently get 25% and 15% of the
+// composite's weight respectively despite showing no demonstrated predictive
+// value at this sample size, while Traction (30% weight) is the pillar
+// actually doing the work. This is evidence a reweighting proposal is worth
+// drafting - but n=37 is a small base for that CI on Traction, and DealFlow's
+// pillar weights are presently fixed point values in mock-data.ts, not a
+// live-reweightable config, so no weight change has been made here. Treat
+// this block as the evidence base for a future, explicit reweighting
+// decision - not an automatic one.
+
 export const CALIBRATION: Calibration = {
   a: 0.877,
   b: -0.430,
