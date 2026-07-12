@@ -7,7 +7,7 @@ import {
 import type { Startup } from "@/lib/mock-data";
 import { VERDICT, countVerdicts, fmtMoney0 } from "@/lib/format";
 import { exportCsv } from "@/lib/import";
-import { Button, VerdictBadge, EmptyState, Badge } from "@/components/app/primitives";
+import { Button, VerdictBadge, EmptyState, Badge, ScoreRing } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | "high" | "moderate" | "low";
@@ -162,7 +162,7 @@ export function CompaniesTable({
                   >
                     <td className="px-4 py-3 font-mono text-[12px] text-ink-3 tabular">{i + 1}</td>
                     <td className="px-2 py-3">
-                      <ScoreCell score={s.score} verdict={s.verdict} />
+                      <ScoreCell score={s.score} verdict={s.verdict} pillars={s.pillars} />
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
@@ -196,7 +196,7 @@ export function CompaniesTable({
                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-tint/50 transition-colors"
               >
                 <span className="font-mono text-[11px] text-ink-3 w-4 tabular">{i + 1}</span>
-                <ScoreCell score={s.score} verdict={s.verdict} />
+                <ScoreCell score={s.score} verdict={s.verdict} pillars={s.pillars} />
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-medium text-ink truncate">{s.name}</div>
                   <div className="text-[11px] text-ink-3 truncate">{s.industry} · {s.is_b2b ? "B2B" : "B2C"} · team {s.team_size}</div>
@@ -239,11 +239,26 @@ function SortHeader({
   );
 }
 
-function ScoreCell({ score, verdict }: { score: number; verdict: Startup["verdict"] }) {
+// Small per-pillar sparkline next to the score — real data (the four
+// pillar scores, normalized to their own max), not decorative filler.
+function PillarSparkline({ pillars, tone }: { pillars: Startup["pillars"]; tone: string }) {
+  const pts = pillars.map((p) => (p.max > 0 ? p.score / p.max : 0));
+  const w = 40, h = 18, step = w / Math.max(1, pts.length - 1);
+  const path = pts
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${(i * step).toFixed(1)} ${(h - v * h).toFixed(1)}`)
+    .join(" ");
   return (
-    <div className="inline-flex items-center gap-2">
-      <span className="w-1.5 h-6 rounded-full" style={{ background: VERDICT[verdict].hex }} />
-      <span className="font-mono text-[15px] font-semibold text-ink tabular">{score}</span>
+    <svg width={w} height={h} className="shrink-0 hidden sm:block" aria-hidden>
+      <path d={path} fill="none" stroke={tone} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.85} />
+    </svg>
+  );
+}
+
+function ScoreCell({ score, verdict, pillars }: { score: number; verdict: Startup["verdict"]; pillars: Startup["pillars"] }) {
+  return (
+    <div className="inline-flex items-center gap-2.5">
+      <ScoreRing score={score} verdict={verdict} size={30} stroke={3} />
+      <PillarSparkline pillars={pillars} tone={VERDICT[verdict].hex} />
     </div>
   );
 }

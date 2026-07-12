@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import {
   ArrowLeft, ChevronDown, TrendingUp, CircleCheck, CircleX, TriangleAlert,
   Sparkles, ArrowRight, Users, LineChart, Wallet, Swords, ClipboardList,
-  FileText, Building2, Quote, Target, Gauge,
+  FileText, Building2, Target, Gauge,
 } from "lucide-react";
 import type { Startup, Pillar } from "@/lib/mock-data";
 import { VERDICT, fmtMoney0 } from "@/lib/format";
@@ -175,7 +175,9 @@ export function CompanyMemo({
   onOpen: (id: number) => void;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [insightOpen, setInsightOpen] = useState(true);
   useEffect(() => setExpanded(null), [startup.id]);
+  useEffect(() => setInsightOpen(true), [startup.id]);
 
   const s = startup;
   const v = VERDICT[s.verdict];
@@ -240,14 +242,46 @@ export function CompanyMemo({
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8 mt-7">
           {/* ------- MAIN ------- */}
           <div className="space-y-9 min-w-0">
-            {/* Investment thesis */}
+            {/* AI Analyst Insight — investment thesis + strengths/risks, one unified read */}
             <section>
-              <div className="rounded-xl border border-accent/20 bg-accent-soft/40 p-5">
-                <div className="flex items-center gap-2 mb-2.5">
-                  <Quote className="w-4 h-4 text-accent-deep" />
-                  <SectionLabel className="!text-accent-deep">Investment thesis</SectionLabel>
-                </div>
-                <p className="text-[15px] leading-relaxed text-ink">{thesis}</p>
+              <div className="rounded-xl border border-accent/25 bg-accent-soft/40 overflow-hidden">
+                <button
+                  onClick={() => setInsightOpen((v) => !v)}
+                  className="w-full flex items-center justify-between gap-3 p-5 text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-accent-deep" />
+                    <SectionLabel className="!text-accent-deep">AI Analyst Insight</SectionLabel>
+                  </div>
+                  <ChevronDown className={cn("w-4 h-4 text-accent-deep transition-transform shrink-0", insightOpen && "rotate-180")} />
+                </button>
+                {insightOpen && (
+                  <div className="px-5 pb-5">
+                    <p className="text-[15px] leading-relaxed text-ink">{thesis}</p>
+                    <div className="grid md:grid-cols-2 gap-3 mt-4">
+                      <div className="rounded-lg border border-good/25 bg-good-soft/60 p-4">
+                        <div className="text-[12px] font-semibold text-good mb-2.5">Pros</div>
+                        <ul className="space-y-2">
+                          {s.strengths.slice(0, 3).map((x, i) => (
+                            <li key={i} className="flex gap-2 text-[12.5px] leading-snug text-ink-2">
+                              <CircleCheck className="w-3.5 h-3.5 text-good shrink-0 mt-0.5" />{x}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-bad/25 bg-bad-soft/60 p-4">
+                        <div className="text-[12px] font-semibold text-bad mb-2.5">Cons</div>
+                        <ul className="space-y-2">
+                          {s.red_flags.slice(0, 3).map((x, i) => (
+                            <li key={i} className="flex gap-2 text-[12.5px] leading-snug text-ink-2">
+                              <CircleX className="w-3.5 h-3.5 text-bad shrink-0 mt-0.5" />{x}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 

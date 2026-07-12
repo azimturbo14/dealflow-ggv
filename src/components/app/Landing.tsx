@@ -82,18 +82,16 @@ function ProductPreview() {
 /* ---------- content blocks ---------- */
 
 const CAPABILITIES = [
-  { icon: Layers, title: "Rank an entire pipeline at once", body: "Import a spreadsheet of hundreds of companies and get a single, comparable ranking — no more reading decks in a random order." },
-  { icon: GitBranch, title: "Explainable by construction", body: "Every score decomposes into four weighted pillars and the exact factors behind them. Nothing is a black box." },
-  { icon: LineChart, title: "Market-aware scoring", body: "Growth isn't self-reported. A regression on each sector's historical market size sets the ceiling every company is measured against." },
-  { icon: FileSearch, title: "Reads the pitch deck for you", body: "Drop in a PDF or financial model and DealFlow extracts revenue, growth, runway and market size to pre-fill the analysis." },
+  { icon: Layers, title: "Rank entire pipeline at once", body: "Drop in a spreadsheet of hundreds of companies and get one single, comparable ranking — no more reading decks in a random order." },
+  { icon: FileSearch, title: "Reads the pitch deck for you", body: "Drop in a PDF or financial model and DealFlow extracts revenue, growth, runway and market size, checked against every factor it measures." },
   { icon: Scale, title: "Consistent, defensible calls", body: "The same rubric is applied to every company, so a partner meeting debates the thesis — not whether the analyst was tired." },
-  { icon: Zap, title: "Hours of triage in seconds", body: "What used to be a week of first-pass screening becomes a three-second pass, leaving your time for the companies that matter." },
+  { icon: Zap, title: "Hours of triage in seconds", body: "What used to take a week of screening becomes a three-second pass, leaving the rest of your time for the companies that matter." },
 ];
 
 const STEPS = [
-  { n: "01", title: "Bring your pipeline", body: "Upload a CSV or Excel export of the companies you're evaluating, or explore a live demo cohort." },
-  { n: "02", title: "DealFlow scores every company", body: "Each is evaluated across team, traction, market and deal fit — with a market regression and confidence rating." },
-  { n: "03", title: "Act on a clear ranking", body: "Open any company as an investment memo: thesis, evidence, risks and a recommended next step." },
+  { n: "01", icon: FileSearch, title: "Import Pipeline", body: "Upload spreadsheets or connect data sources — or explore a live demo cohort." },
+  { n: "02", icon: Zap, title: "AI-Powered Scoring", body: "DealFlow evaluates across team, traction, market and deal fit — with a market regression and confidence rating." },
+  { n: "03", icon: LineChart, title: "Data-Driven Shortlist", body: "Act on a clear ranking with transparent rationale: thesis, evidence, risks and a recommended next step." },
 ];
 
 const TRUST = [
@@ -125,7 +123,7 @@ export function Landing({
             <button onClick={onDemo} className="hidden sm:inline-flex text-[13px] font-medium text-ink-2 hover:text-ink px-3 py-2 rounded-lg transition-colors">
               Explore demo
             </button>
-            <button onClick={onStart} className="inline-flex items-center gap-1.5 text-[13px] font-medium bg-ink text-canvas px-3.5 py-2 rounded-lg hover:opacity-90 transition-opacity">
+            <button onClick={onStart} className="inline-flex items-center gap-1.5 text-[13px] font-medium bg-accent text-[#04120f] px-3.5 py-2 rounded-lg hover:bg-accent-deep transition-colors">
               Start screening <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -141,17 +139,17 @@ export function Landing({
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft" />
             Investment intelligence for venture capital
           </div>
-          <h1 className="animate-fade-up text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05] text-balance max-w-4xl mx-auto" style={{ animationDelay: "0.05s" }}>
-            Find the few companies<br className="hidden sm:block" /> worth your conviction.
+          <h1 className="animate-fade-up text-4xl sm:text-6xl font-bold tracking-tight leading-[1.05] text-balance max-w-4xl mx-auto" style={{ animationDelay: "0.05s" }}>
+            Precision Triage for<br className="hidden sm:block" /> Venture Capital
           </h1>
           <p className="animate-fade-up text-[15px] sm:text-lg text-ink-2 mt-6 max-w-2xl mx-auto leading-relaxed text-balance" style={{ animationDelay: "0.1s" }}>
-            DealFlow screens hundreds of startups in a single pass and ranks them by their potential to become exceptional investments — with a transparent rationale behind every score.
+            Automate the first-pass screening of startup pipelines and find the few companies worth your conviction.
           </p>
           <div className="animate-fade-up flex flex-col sm:flex-row items-center justify-center gap-3 mt-9" style={{ animationDelay: "0.15s" }}>
-            <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-6 py-3.5 rounded-xl hover:bg-accent-deep transition-colors shadow-[0_8px_30px_-8px_rgba(45,212,191,0.5)]">
+            <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-6 py-3 rounded-lg hover:bg-accent-deep transition-colors shadow-[0_8px_30px_-8px_rgba(45,212,191,0.5)]">
               Start screening <ArrowRight className="w-4 h-4" />
             </button>
-            <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-line bg-pane/60 text-ink font-medium text-sm px-6 py-3.5 rounded-xl hover:bg-raise transition-colors">
+            <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-line bg-pane/60 text-ink font-medium text-sm px-6 py-3 rounded-lg hover:bg-raise transition-colors">
               Explore demo
             </button>
           </div>
@@ -183,19 +181,19 @@ export function Landing({
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how" className="max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
-        <div className="max-w-2xl">
-          <SectionKicker>How it works</SectionKicker>
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mt-3">From a spreadsheet to a shortlist.</h2>
-          <p className="text-[15px] text-ink-2 mt-4 leading-relaxed">Three steps between an unread pipeline and a ranked, defensible view of where to spend your attention.</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-5 mt-12">
+      {/* From noise to signal */}
+      <section id="how" className="max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-24 text-center">
+        <SectionKicker>From noise to signal</SectionKicker>
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mt-3">From noise to signal</h2>
+        <div className="relative grid sm:grid-cols-3 gap-8 sm:gap-4 mt-14">
+          <div className="hidden sm:block absolute top-7 left-[16.6%] right-[16.6%] h-px bg-line" />
           {STEPS.map((s) => (
-            <div key={s.n} className="relative rounded-xl border border-line bg-pane p-6 lift">
-              <div className="font-mono text-[13px] text-accent font-semibold">{s.n}</div>
-              <h3 className="text-lg font-semibold mt-3">{s.title}</h3>
-              <p className="text-[13px] text-ink-2 mt-2 leading-relaxed">{s.body}</p>
+            <div key={s.n} className="relative flex flex-col items-center">
+              <div className="w-14 h-14 rounded-xl bg-accent-soft border border-accent/20 grid place-items-center text-accent-deep relative z-10 bg-canvas">
+                <s.icon className="w-6 h-6" />
+              </div>
+              <h3 className="text-[15px] font-semibold mt-4">{s.n.replace(/^0/, "")}. {s.title}</h3>
+              <p className="text-[13px] text-ink-2 mt-2 leading-relaxed max-w-[220px]">{s.body}</p>
             </div>
           ))}
         </div>
@@ -205,10 +203,10 @@ export function Landing({
       <section id="capabilities" className="border-t border-line bg-raise/30">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
           <div className="max-w-2xl">
-            <SectionKicker>Capabilities</SectionKicker>
+            <SectionKicker>Institutional-grade analysis</SectionKicker>
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mt-3">Built for the way investors actually decide.</h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px mt-12 bg-line rounded-2xl overflow-hidden border border-line">
+          <div className="grid sm:grid-cols-2 gap-px mt-12 bg-line rounded-2xl overflow-hidden border border-line">
             {CAPABILITIES.map((c) => (
               <div key={c.title} className="bg-canvas p-7 hover:bg-pane transition-colors">
                 <div className="w-10 h-10 rounded-lg bg-accent-soft border border-accent/20 grid place-items-center text-accent">
@@ -226,7 +224,7 @@ export function Landing({
       <section id="trust" className="max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
         <div className="grid lg:grid-cols-2 gap-14 items-start">
           <div>
-            <SectionKicker>Why investors trust it</SectionKicker>
+            <SectionKicker>Defensible decision making</SectionKicker>
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mt-3 text-balance">A verdict you can defend in the partner meeting.</h2>
             <p className="text-[15px] text-ink-2 mt-4 leading-relaxed">
               DealFlow never asks you to take a number on faith. Every recommendation carries its reasoning, its evidence, and an honest measure of how much is known.
@@ -267,10 +265,10 @@ export function Landing({
                 Screen your pipeline in seconds. Spend your hours on the companies that earn them.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-9">
-                <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-7 py-3.5 rounded-xl hover:bg-accent-deep transition-colors">
+                <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-7 py-3 rounded-lg hover:bg-accent-deep transition-colors">
                   Start screening <ArrowRight className="w-4 h-4" />
                 </button>
-                <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center border border-line bg-pane text-ink font-medium text-sm px-7 py-3.5 rounded-xl hover:bg-raise transition-colors">
+                <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center border border-line bg-pane text-ink font-medium text-sm px-7 py-3 rounded-lg hover:bg-raise transition-colors">
                   Explore demo
                 </button>
               </div>

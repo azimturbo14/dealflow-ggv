@@ -87,7 +87,7 @@ export function Workspace({
   );
 
   return (
-    <div className="min-h-dvh lg:h-dvh flex flex-col lg:flex-row bg-canvas text-ink lg:overflow-hidden">
+    <div className="theme-dark min-h-dvh lg:h-dvh flex flex-col lg:flex-row bg-canvas text-ink lg:overflow-hidden">
       {/* Sidebar — desktop */}
       <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-line bg-pane">
         <div className="flex items-center px-4 h-16 border-b border-line">
