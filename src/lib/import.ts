@@ -88,10 +88,41 @@ function rowsToStartups(rows: string[][], startId: number): Startup[] {
   );
 }
 
+// RFC-4180-ish CSV line splitter. The previous version did a naive
+// line.split(",") which corrupts any row with a comma inside a quoted field
+// (e.g. "Acme, Inc." or a free-text description with commas) - every
+// column after the quoted field would shift by one. Auto-researched exports
+// (see export_to_dealflow.py) routinely quote descriptions containing
+// commas, so this needs to actually honor quoting, not just split on
+// commas and hope real-world data never has one.
+function parseCsvLine(line: string): string[] {
+  const cells: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; } // escaped quote
+        else inQuotes = false;
+      } else {
+        cur += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      cells.push(cur.trim());
+      cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  cells.push(cur.trim());
+  return cells;
+}
+
 function parseCsvText(text: string): string[][] {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.split(",").map((c) => c.trim()));
+  return text.split(/\r?\n/).map(parseCsvLine);
 }
 
 export async function parseStartupsFromFile(

@@ -504,6 +504,7 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
     is_b2b, dev_stage: stage, unique_tech,
     technical_cofounder: input.technical_cofounder,
     sector_key: key, industry, description: input.description,
+    region: mkt.country.region,
   }, MENA_CLIENT_THESIS);
   let verdict: "high" | "moderate" | "low" = qualityVerdict;
   if (thesis_fit.gate === 'hard-pass') verdict = 'low';                       // off-mandate → pass regardless of quality
@@ -536,6 +537,18 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0): St
   if (strengths.length === 0) strengths.push('Early-stage — upside contingent on execution and market timing');
 
   const red_flags: string[] = [];
+  // Non-startup entity heuristic - added after finding a regulated wealth-
+  // management/PE firm (CENT Financial Solutions) sitting in the source CRM's
+  // Passed pool, which would otherwise get scored as if it were an ordinary
+  // startup. This is a deliberately narrow, keyword-based check (never a
+  // silent auto-exclude) - it just surfaces the concern for a human to
+  // resolve, same as everything else this app flags rather than guesses.
+  const nonStartupHaystack = `${industry} ${input.description ?? ''} ${input.name}`.toLowerCase();
+  const NON_STARTUP_KEYWORDS = ['wealth management', 'asset management', 'financial solutions llc', 'family office', 'private equity fund', 'holding company', 'investment advisory', 'brokerage'];
+  const nonStartupHit = NON_STARTUP_KEYWORDS.find((k) => nonStartupHaystack.includes(k));
+  if (nonStartupHit) {
+    red_flags.push(`Possible non-startup entity: description matches "${nonStartupHit}" — this may be a regulated financial/holding firm rather than a VC-fundable startup. Verify before trusting this score.`);
+  }
   if (!has_previous_exit && !input.successful_project) red_flags.push('First-time founder, no delivery record — execution risk');
   if (sales_amount_usd === 0) red_flags.push('Pre-revenue — product-market fit unproven');
   if (rg == null && input.sam_usd == null) red_flags.push('No financial/market data supplied — verdict runs on sector defaults');

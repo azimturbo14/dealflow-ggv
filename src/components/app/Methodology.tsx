@@ -2,6 +2,7 @@
 
 import { FileInput, SlidersHorizontal, ScrollText } from "lucide-react";
 import { Card, Meter, SectionLabel } from "@/components/app/primitives";
+import { CALIBRATION } from "@/lib/calibration";
 
 const STEPS = [
   {
@@ -106,6 +107,26 @@ export function Methodology() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-code rounded-xl px-6 py-6">
+        <SectionLabel className="!text-[#8b8f99]">Calibration &amp; honest limits</SectionLabel>
+        <p className="text-[13px] leading-relaxed text-[#c7cbd4] mt-3">
+          The 0-100 quality score is converted into a calibrated pursue-probability by fitting a logistic curve
+          (Platt scaling) against this fund&apos;s own historical decisions — real, sourced companies from the CRM,
+          not synthetic data. That fit is refit every time more decisions are researched into the cohort, and its
+          honest, leave-one-out (not in-sample) performance is always shown next to it, not hidden in a changelog.
+        </p>
+        <p className="text-[13px] leading-relaxed text-[#c7cbd4] mt-3">
+          Current fit: <span className="font-mono text-white">{CALIBRATION.fitN.positives + CALIBRATION.fitN.negatives} historical decisions</span> (
+          {CALIBRATION.fitN.positives} pursued, {CALIBRATION.fitN.negatives} passed) ·{" "}
+          <span className="font-mono text-white">leave-one-out AUC {CALIBRATION.looAuc.toFixed(2)}</span>. That is
+          meaningfully above chance (0.50) but still a small, imbalanced sample — this fund has only ever advanced a
+          handful of deals past IC discussion in its whole history, which structurally caps how much the positive
+          class can grow no matter how much more research goes into this cohort. Use the calibrated probability to{" "}
+          <strong className="text-white">prioritize review order</strong>, not as a precision go/no-go gate, until the
+          labeled history is materially larger.
+        </p>
       </div>
 
       <Card title="Reading a pitch deck — free, in the browser">
