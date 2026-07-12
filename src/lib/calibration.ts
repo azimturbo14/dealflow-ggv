@@ -117,6 +117,22 @@
 //   the two flagged), not an exhaustive re-verification of all 45 records'
 //   every field - remaining fields are only as temporally accurate as their
 //   original sourcing pass was.
+//   *** REFIT - 2026-07 batch #4 (n unchanged: 13 pos + 24 neg, cohort grew 57->63) ***
+//   Added 6 more real, individually-sourced companies (Pixxel Space, Regent
+//   Craft, Atmo Biosciences, Vispera, Celligenics, Basma) to broaden the
+//   thesis-gate and fund_construction test coverage (three are off-geography
+//   per MENA_CLIENT_THESIS.core_regions - India, Australia x2, Singapore;
+//   one is a B2C mismatch - Basma; two are check-size-driven fund_construction
+//   passes - Regent Craft, Vispera). None of the 6 are pass_kind 'quality' or
+//   'mixed', so the quality-vs-pursued training contrast this calibration is
+//   fit on is UNCHANGED (still 13 pos + 24 neg) - a,b, and LOO-AUC below are
+//   not refit because there is nothing new for them to fit against. This is
+//   an honest non-result, not an oversight: growing thesis-gate/geography
+//   coverage and growing the quality-decidable cohort are two different
+//   axes of "more data," and this batch only advanced the former. The
+//   quality-decidable cohort (still 37) remains the bottleneck for moving
+//   LOO-AUC off its current 0.58-0.63 plateau - see task "grow negative-
+//   class cohort toward n=60-80 quality-decidable" for next steps.
 export interface Calibration {
   a: number;        // logistic slope on z = (score-50)/10
   b: number;        // logistic intercept
