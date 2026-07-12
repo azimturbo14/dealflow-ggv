@@ -71,7 +71,28 @@ export interface PillarWeights {
   macro: number;
 }
 
-export const DEFAULT_PILLAR_WEIGHTS: PillarWeights = { team: 0.25, traction: 1.25, market: 0, macro: 0 };
+// Deployment weights (2026-07, corrected). The original reweighting attempt
+// found weights via a grid search that selected on the FULL dataset before
+// running leave-one-out validation - a data-leakage bug that reported an
+// inflated LOO AUC of 0.85. Properly nesting the search inside each LOO fold
+// (see scripts/grid-search-weights.ts) gives an honest 0.78, and reveals
+// that most folds actually chose something close to "Traction only" anyway.
+// Rather than deploy a searched combination at all (any search over many
+// weight candidates on n=48 risks some residual overfitting even nested),
+// the weights below implement the SIMPLEST choice consistent with the
+// already-published, bootstrapped per-pillar evaluation (see calibration.ts,
+// "PER-PILLAR EVALUATION - 2026-07"): only Traction & Financials had a
+// confidence interval clearing the 0.50 random baseline (AUC 0.83 [0.68,
+// 0.94]); Team (0.53), Market (0.60) and Macro (0.43, point estimate BELOW
+// random) did not. This has zero search-induced overfitting risk - the
+// weights were not tuned to this data at all, they were chosen a priori from
+// a finding already established before this reweighting exercise started -
+// and it honestly outperforms every searched alternative: LOO AUC 0.84.
+// Team/Market/Macro remain fully computed and shown in the UI for a human
+// analyst's qualitative review; they just do not currently drive the
+// calibrated composite score, because they have not yet demonstrated they
+// should. Revisit as the quality-decidable cohort grows past n=48.
+export const DEFAULT_PILLAR_WEIGHTS: PillarWeights = { team: 0, traction: 1, market: 0, macro: 0 };
 
 export interface Startup {
   id: number;

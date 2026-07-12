@@ -3,6 +3,7 @@
 import { FileInput, SlidersHorizontal, ScrollText } from "lucide-react";
 import { Card, Meter, SectionLabel } from "@/components/app/primitives";
 import { CALIBRATION } from "@/lib/calibration";
+import { DEFAULT_PILLAR_WEIGHTS } from "@/lib/mock-data";
 
 const STEPS = [
   {
@@ -19,12 +20,28 @@ const STEPS = [
   },
 ];
 
+// "points" below is each pillar's own rubric ceiling (how its sub-score is
+// built, unchanged since launch) - NOT how much it moves the final composite
+// score. That is a separate, and currently very different, number: see
+// DEFAULT_PILLAR_WEIGHTS (src/lib/mock-data.ts), which multiplies each
+// pillar's score before the composite is computed. As of 2026-07 that
+// multiplier is 0 for Market and Macro and 0 for Team (Traction = 1, i.e.
+// 100% of the composite) - see the "CORRECTION" note in calibration.ts for
+// why. Pulling the multiplier from DEFAULT_PILLAR_WEIGHTS directly here
+// means this page cannot silently drift out of sync with the scoring engine
+// the way it did in a previous revision (that bug shipped static "25/30/30/
+// 15%" composite-weight labels that no longer matched the engine at all).
 const PILLARS = [
-  { name: "Team & Founder", weight: 25, tone: "accent" as const, factors: "Execution track record (prior exit / shipped projects), founder background depth, technical moat (unique tech / patents), and team size." },
-  { name: "Traction & Financials", weight: 30, tone: "good" as const, factors: "Prior investment, revenue validation, revenue growth, runway, and development stage. Growth and runway come from the financial model when supplied." },
-  { name: "Market & Growth", weight: 30, tone: "warn" as const, factors: "Serviceable market (SAM), regression-projected CAGR, obtainable market (SOM) at exit, and competitive density." },
-  { name: "Macro & Deal Fit", weight: 15, tone: "ink" as const, factors: "Regulatory environment, geography and currency, capital / FDI trend, and the ask versus a typical early-stage mandate." },
+  { key: "team" as const, name: "Team & Founder", points: 25, tone: "accent" as const, factors: "Execution track record (prior exit / shipped projects), founder background depth, technical moat (unique tech / patents), and team size." },
+  { key: "traction" as const, name: "Traction & Financials", points: 30, tone: "good" as const, factors: "Prior investment, revenue validation, revenue growth, runway, and development stage. Growth and runway come from the financial model when supplied." },
+  { key: "market" as const, name: "Market & Growth", points: 30, tone: "warn" as const, factors: "Serviceable market (SAM), regression-projected CAGR, obtainable market (SOM) at exit, and competitive density." },
+  { key: "macro" as const, name: "Macro & Deal Fit", points: 15, tone: "ink" as const, factors: "Regulatory environment, geography and currency, capital / FDI trend, and the ask versus a typical early-stage mandate." },
 ];
+
+const TOTAL_WEIGHT = DEFAULT_PILLAR_WEIGHTS.team + DEFAULT_PILLAR_WEIGHTS.traction + DEFAULT_PILLAR_WEIGHTS.market + DEFAULT_PILLAR_WEIGHTS.macro;
+function compositeSharePct(key: keyof typeof DEFAULT_PILLAR_WEIGHTS): number {
+  return TOTAL_WEIGHT > 0 ? Math.round((DEFAULT_PILLAR_WEIGHTS[key] / TOTAL_WEIGHT) * 100) : 0;
+}
 
 const TONE_HEX = { accent: "bg-accent", good: "bg-good", warn: "bg-warn", ink: "bg-ink-3" };
 
@@ -57,19 +74,36 @@ export function Methodology() {
         ))}
       </div>
 
-      <Card title="The four pillars — 100 points">
+      <Card title="The four pillars — 100 rubric points, unevenly weighted today">
+        <p className="text-[12.5px] leading-relaxed text-ink-3 mb-4">
+          Each pillar still scores on its own rubric out of the points shown below - that part is unchanged.
+          But since 2026-07, only Traction &amp; Financials drives the calibrated composite score (100% weight);
+          the calibrated model has not yet demonstrated that Team, Market or Macro predict this fund&apos;s real
+          decisions at the current sample size (n={CALIBRATION.fitN.positives + CALIBRATION.fitN.negatives}). Team,
+          Market and Macro are still fully computed and shown per-company for qualitative review - see{" "}
+          <span className="text-ink-2">%</span> of composite below for what actually moves the score today.
+        </p>
         <div className="space-y-4">
-          {PILLARS.map((p) => (
-            <div key={p.name}>
-              <div className="flex items-center gap-2.5 mb-1.5">
-                <span className={`w-2.5 h-2.5 rounded-full ${TONE_HEX[p.tone]}`} />
-                <span className="text-[13px] font-semibold text-ink">{p.name}</span>
-                <span className="font-mono text-[11px] text-ink-3 tabular">{p.weight} pts</span>
-                <div className="flex-1 ml-1"><Meter value={p.weight} max={30} tone={p.tone} /></div>
+          {PILLARS.map((p) => {
+            const sharePct = compositeSharePct(p.key);
+            return (
+              <div key={p.name}>
+                <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                  <span className={`w-2.5 h-2.5 rounded-full ${TONE_HEX[p.tone]}`} />
+                  <span className="text-[13px] font-semibold text-ink">{p.name}</span>
+                  <span className="font-mono text-[11px] text-ink-3 tabular">{p.points} rubric pts</span>
+                  <div className="flex-1 ml-1 min-w-[60px]"><Meter value={p.points} max={30} tone={p.tone} /></div>
+                  <span
+                    className={`font-mono text-[10.5px] tabular px-1.5 py-0.5 rounded ${sharePct > 0 ? "text-ink-2 bg-tint" : "text-ink-3 bg-canvas border border-line"}`}
+                    title="Share of the CALIBRATED composite score, per DEFAULT_PILLAR_WEIGHTS - not the same as the rubric points to the left."
+                  >
+                    {sharePct}% of composite
+                  </span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-ink-2 pl-5">{p.factors}</p>
               </div>
-              <p className="text-[13px] leading-relaxed text-ink-2 pl-5">{p.factors}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="mt-5 pt-4 border-t border-line-2 grid grid-cols-3 gap-3 text-center">
           {[

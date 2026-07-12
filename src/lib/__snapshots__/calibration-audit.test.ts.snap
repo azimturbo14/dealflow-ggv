@@ -2,11 +2,11 @@
 
 exports[`Cohort Score Distribution > score distribution snapshot 1`] = `
 {
-  "max": 61,
-  "mean": 26.2,
+  "max": 67,
+  "mean": 25.8,
   "median": 27,
-  "min": 9,
+  "min": 7,
   "n": 76,
-  "sd": 10.2,
+  "sd": 12,
 }
 `;

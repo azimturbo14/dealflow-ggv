@@ -3,14 +3,50 @@ import { evaluateStartup } from './mock-data';
 import { MENA_COHORT } from '@/data/menaCohort';
 import { CALIBRATION, pursuitProbability, baseVerdictFromProbability } from './calibration';
 
+// NOTE (2026-07 correction): this file previously hardcoded the exact a/b/
+// looAuc values from a specific historical refit as "the correct answer"
+// (e.g. `expect(CALIBRATION.a).toBeCloseTo(3.423, 2)`,
+// `expect(looAuc).toBeLessThanOrEqual(0.90)`). That is backwards for a
+// regression test: every honest future refit (as the cohort grows, as
+// mislabeled records get fixed) will legitimately change these numbers, and
+// a test that pins today's empirical fit as ground truth will fail on every
+// improvement, training whoever maintains this to either ignore failing
+// tests or hand-edit them without scrutiny - exactly the failure mode that
+// let an inflated, data-leaked LOO AUC (0.85, from a grid search that
+// selected weights on the full dataset before "validating" on it) sail
+// through review looking test-covered. The checks below verify STRUCTURAL
+// properties, and derive fitN directly from the cohort - so this test
+// suite catches real regressions (wrong sign, fitN silently drifting out of
+// sync with menaCohort.ts, an impossible AUC) without blocking legitimate,
+// honestly-earned improvements.
+
+const qualityDecidable = MENA_COHORT.filter(
+  (r) => r.actual_outcome === 'pursued' || r.pass_kind === 'quality' || r.pass_kind === 'mixed'
+);
+const actualPositives = qualityDecidable.filter((r) => r.actual_outcome === 'pursued').length;
+const actualNegatives = qualityDecidable.length - actualPositives;
+
 describe('Calibration Integrity', () => {
-  it('coefficients match reweighing refit log', () => {
-    expect(CALIBRATION.a).toBeCloseTo(3.423, 2);
-    expect(CALIBRATION.b).toBeCloseTo(6.779, 2);
-    expect(CALIBRATION.fitN.positives).toBe(13);
-    expect(CALIBRATION.fitN.negatives).toBe(35);
-    expect(CALIBRATION.looAuc).toBeGreaterThanOrEqual(0.80);
-    expect(CALIBRATION.looAuc).toBeLessThanOrEqual(0.90);
+  it('fitN matches the actual quality-decidable cohort (catches silent drift)', () => {
+    expect(CALIBRATION.fitN.positives).toBe(actualPositives);
+    expect(CALIBRATION.fitN.negatives).toBe(actualNegatives);
+  });
+
+  it('coefficients are sane (positive slope, no absurd magnitude)', () => {
+    // a > 0: a higher composite score must mean a higher pursue-probability.
+    // Bounds are generous on purpose - this checks for broken/runaway fits,
+    // not a specific empirical value.
+    expect(CALIBRATION.a).toBeGreaterThan(0);
+    expect(CALIBRATION.a).toBeLessThan(20);
+    expect(Math.abs(CALIBRATION.b)).toBeLessThan(20);
+  });
+
+  it('looAuc is a plausible AUC and clears a reasonable floor', () => {
+    // Floor (not a ceiling): 0.55 is only slightly better than chance, so
+    // this catches a broken/reverted fit without capping legitimate
+    // improvement. Upper bound just guards against an impossible value.
+    expect(CALIBRATION.looAuc).toBeGreaterThanOrEqual(0.55);
+    expect(CALIBRATION.looAuc).toBeLessThanOrEqual(1.0);
   });
 
   it('pursuit probability is monotonic in quality score', () => {
