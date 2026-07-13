@@ -8,6 +8,7 @@ import {
 import { parseStartupsFromFile, downloadCsvTemplate } from "@/lib/import";
 import { mockStartups, type Startup } from "@/lib/mock-data";
 import { Logo } from "@/components/app/Logo";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 
 export type SourceKind = "upload" | "demo";
 
@@ -51,17 +52,20 @@ export function SourcePicker({
   }, [onData]);
 
   return (
-    <div className="theme-dark min-h-dvh bg-canvas text-ink flex flex-col">
+    <div className="min-h-dvh bg-canvas text-ink flex flex-col">
       {/* top bar */}
       <div className="border-b border-line bg-pane/70 backdrop-blur">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 sm:px-8 h-16">
           <Logo subtitle="New screening" />
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back
+            </button>
+          </div>
         </div>
       </div>
 

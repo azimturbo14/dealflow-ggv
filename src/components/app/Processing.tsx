@@ -52,7 +52,7 @@ export function Processing({
   const shown = Math.round(progress * companies.length);
 
   return (
-    <div className="theme-dark min-h-dvh bg-canvas text-ink grid place-items-center px-5">
+    <div className="min-h-dvh bg-canvas text-ink grid place-items-center px-5">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center text-center">
           <div className="relative">
@@ -98,7 +98,7 @@ export function Processing({
                     state === "done"
                       ? "bg-good-soft text-good"
                       : state === "active"
-                      ? "bg-accent text-white"
+                      ? "bg-accent text-accent-fg"
                       : "bg-tint text-ink-3"
                   }`}
                 >

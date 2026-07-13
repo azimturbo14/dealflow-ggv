@@ -8,6 +8,7 @@ import type { Startup } from "@/lib/mock-data";
 import { countVerdicts } from "@/lib/format";
 import { Logo } from "@/components/app/Logo";
 import { Button } from "@/components/app/primitives";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { Dashboard } from "@/components/app/Dashboard";
 import { CompaniesTable } from "@/components/app/CompaniesTable";
 import { CompanyMemo } from "@/components/app/CompanyMemo";
@@ -87,7 +88,7 @@ export function Workspace({
   );
 
   return (
-    <div className="theme-dark min-h-dvh lg:h-dvh flex flex-col lg:flex-row bg-canvas text-ink lg:overflow-hidden">
+    <div className="min-h-dvh lg:h-dvh flex flex-col lg:flex-row bg-canvas text-ink lg:overflow-hidden">
       {/* Sidebar — desktop */}
       <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-line bg-pane">
         <div className="flex items-center px-4 h-16 border-b border-line">
@@ -113,11 +114,14 @@ export function Workspace({
             </div>
           ))}
         </nav>
-        <div className="p-3 border-t border-line">
-          <div className="text-[11px] text-ink-3 mb-2 truncate" title={sourceLabel}>{sourceLabel}</div>
-          <Button variant="outline" size="sm" className="w-full" onClick={onReset}>
-            <RefreshCw className="w-3.5 h-3.5" /> New screening
-          </Button>
+        <div className="p-3 border-t border-line space-y-2.5">
+          <div className="text-[11px] text-ink-3 truncate" title={sourceLabel}>{sourceLabel}</div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="outline" size="sm" className="flex-1" onClick={onReset}>
+              <RefreshCw className="w-3.5 h-3.5" /> New screening
+            </Button>
+          </div>
         </div>
       </aside>
 
@@ -126,6 +130,7 @@ export function Workspace({
         <div className="flex items-center justify-between px-4 h-14">
           <Logo />
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="brand" size="sm" onClick={() => setModalOpen(true)}>
               <Plus className="w-3.5 h-3.5" /> Add
             </Button>

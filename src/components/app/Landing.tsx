@@ -5,6 +5,7 @@ import {
   Search, FileSearch, Scale, CircleCheck, Quote,
 } from "lucide-react";
 import { Logo } from "@/components/app/Logo";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 
 /* ---------- product preview (numbers match the live demo cohort) ---------- */
 const PREVIEW_ROWS = [
@@ -109,7 +110,7 @@ export function Landing({
   onDemo: () => void;
 }) {
   return (
-    <div className="theme-dark bg-canvas text-ink min-h-dvh overflow-x-hidden scroll-thin">
+    <div className="bg-canvas text-ink min-h-dvh overflow-x-hidden scroll-thin">
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-line/70 bg-canvas/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 h-16">
@@ -120,10 +121,11 @@ export function Landing({
             <a href="#trust" className="hover:text-ink transition-colors">Why it's trusted</a>
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <button onClick={onDemo} className="hidden sm:inline-flex text-[13px] font-medium text-ink-2 hover:text-ink px-3 py-2 rounded-lg transition-colors">
               Explore demo
             </button>
-            <button onClick={onStart} className="inline-flex items-center gap-1.5 text-[13px] font-medium bg-accent text-[#04120f] px-3.5 py-2 rounded-lg hover:bg-accent-deep transition-colors">
+            <button onClick={onStart} className="inline-flex items-center gap-1.5 text-[13px] font-medium bg-accent text-accent-fg px-3.5 py-2 rounded-lg hover:bg-accent-deep transition-colors">
               Start screening <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -146,7 +148,7 @@ export function Landing({
             Automate the first-pass screening of startup pipelines and find the few companies worth your conviction.
           </p>
           <div className="animate-fade-up flex flex-col sm:flex-row items-center justify-center gap-3 mt-9" style={{ animationDelay: "0.15s" }}>
-            <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-6 py-3 rounded-lg hover:bg-accent-deep transition-colors shadow-[0_8px_30px_-8px_rgba(45,212,191,0.5)]">
+            <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold text-sm px-6 py-3 rounded-lg hover:bg-accent-deep transition-colors shadow-[0_8px_30px_-8px_rgba(45,212,191,0.5)]">
               Start screening <ArrowRight className="w-4 h-4" />
             </button>
             <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-line bg-pane/60 text-ink font-medium text-sm px-6 py-3 rounded-lg hover:bg-raise transition-colors">
@@ -265,7 +267,7 @@ export function Landing({
                 Screen your pipeline in seconds. Spend your hours on the companies that earn them.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-9">
-                <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-7 py-3 rounded-lg hover:bg-accent-deep transition-colors">
+                <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold text-sm px-7 py-3 rounded-lg hover:bg-accent-deep transition-colors">
                   Start screening <ArrowRight className="w-4 h-4" />
                 </button>
                 <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center border border-line bg-pane text-ink font-medium text-sm px-7 py-3 rounded-lg hover:bg-raise transition-colors">

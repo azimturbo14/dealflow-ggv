@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const instrumentSans = Instrument_Sans({
   variable: "--font-instrument",
@@ -46,8 +47,10 @@ export default function RootLayout({
       <body
         className={`${instrumentSans.variable} ${plexMono.variable} antialiased bg-canvas text-ink`}
       >
-        {children}
-        <Toaster />
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
