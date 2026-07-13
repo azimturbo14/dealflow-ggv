@@ -7,7 +7,7 @@ import {
   FileText, Building2, Target, Gauge,
 } from "lucide-react";
 import type { Startup, Pillar } from "@/lib/mock-data";
-import { VERDICT, fmtMoney0 } from "@/lib/format";
+import { VERDICT, fmtMoney0, fmtProb } from "@/lib/format";
 import { CALIBRATION } from "@/lib/calibration";
 import {
   Card, VerdictBadge, ScoreRing, Meter, ConfidenceMeter, SectionLabel, Badge, Button,
@@ -112,7 +112,7 @@ function FactorRow({
         </span>
         <span className="hidden md:block text-[11px] text-ink-3 w-36 text-right truncate">{factor.value}</span>
         <span className={cn("font-mono text-xs font-semibold w-12 text-right tabular", dirTone)}>
-          +{factor.impact}<span className="text-ink-3">/{factor.max_impact}</span>
+          {factor.direction === "positive" ? "+" : ""}{factor.impact}<span className="text-ink-3">/{factor.max_impact}</span>
         </span>
         <ChevronDown className={cn("w-3.5 h-3.5 text-ink-3 shrink-0 transition-transform", expanded && "rotate-180")} />
       </button>
@@ -290,7 +290,7 @@ export function CompanyMemo({
               icon={Sparkles}
               num="01"
               title="Why the model ranked it this way"
-              aside={<span className="font-mono text-[12px] text-ink-3">4 pillars = <span className="font-semibold text-ink">{s.score}/100</span></span>}
+              aside={<span className="font-mono text-[12px] text-ink-3">Traction-calibrated = <span className="font-semibold text-ink">{s.score}/100</span></span>}
             >
               {/* top drivers */}
               {topDrivers.length > 0 && (
@@ -349,7 +349,7 @@ export function CompanyMemo({
             {/* Fund-thesis fit */}
             <MemoSection
               icon={Target}
-              num="01·"
+              num="02"
               title="Fund-thesis fit"
               aside={
                 <Badge tone={s.thesis_fit.band === "on-thesis" ? "good" : s.thesis_fit.band === "off-thesis" ? "bad" : "warn"}>
@@ -404,7 +404,7 @@ export function CompanyMemo({
             </MemoSection>
 
             {/* Founder assessment */}
-            <MemoSection icon={Users} num="02" title="Founder assessment" aside={<span className="font-mono text-[12px] text-ink-3">{teamPillar.score}/{teamPillar.max}</span>}>
+            <MemoSection icon={Users} num="03" title="Founder assessment" aside={<span className="font-mono text-[12px] text-ink-3">{teamPillar.score}/{teamPillar.max}</span>}>
               <Card>
                 <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4">
                   <Fact label="Founder" value={s.founder_name} />
@@ -422,7 +422,7 @@ export function CompanyMemo({
             </MemoSection>
 
             {/* Market opportunity */}
-            <MemoSection icon={LineChart} num="03" title="Market opportunity" aside={<Badge tone="accent"><TrendingUp className="w-3 h-3" /> Regression model</Badge>}>
+            <MemoSection icon={LineChart} num="04" title="Market opportunity" aside={<Badge tone="accent"><TrendingUp className="w-3 h-3" /> Regression model</Badge>}>
               <Card>
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <Stat label="Modeled CAGR" value={`${(fc.cagr * 100).toFixed(1)}%`} tone={fc.cagr >= 0.2 ? "good" : "ink"} />
@@ -453,7 +453,7 @@ export function CompanyMemo({
             </MemoSection>
 
             {/* Traction */}
-            <MemoSection icon={TrendingUp} num="04" title="Traction" aside={<span className="font-mono text-[12px] text-ink-3">{tracPillar.score}/{tracPillar.max}</span>}>
+            <MemoSection icon={TrendingUp} num="05" title="Traction" aside={<span className="font-mono text-[12px] text-ink-3">{tracPillar.score}/{tracPillar.max}</span>}>
               <Card>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <Stat label="Revenue" value={fmtMoney0(s.sales_amount_usd)} tone={s.sales_amount_usd > 0 ? "good" : undefined} />
@@ -465,7 +465,7 @@ export function CompanyMemo({
             </MemoSection>
 
             {/* Financial signals */}
-            <MemoSection icon={Wallet} num="05" title="Financial signals">
+            <MemoSection icon={Wallet} num="06" title="Financial signals">
               <Card>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <Stat label="Total funding" value={fmtMoney0(s.funding_total_usd)} />
@@ -484,7 +484,7 @@ export function CompanyMemo({
             </MemoSection>
 
             {/* Competitive position */}
-            <MemoSection icon={Swords} num="06" title="Competitive position">
+            <MemoSection icon={Swords} num="07" title="Competitive position">
               <Card>
                 <div className="flex items-center justify-between">
                   <div>
@@ -509,7 +509,7 @@ export function CompanyMemo({
             </MemoSection>
 
             {/* Strengths & Risks */}
-            <MemoSection icon={Building2} num="07" title="Strengths & risks">
+            <MemoSection icon={Building2} num="08" title="Strengths & risks">
               <div className="grid md:grid-cols-2 gap-4">
                 <Card title="Strengths">
                   <ul className="space-y-2.5">
@@ -542,7 +542,7 @@ export function CompanyMemo({
             </MemoSection>
 
             {/* Supporting evidence */}
-            <MemoSection icon={FileText} num="08" title="Supporting evidence" aside={<span className="microlabel">Audit log</span>}>
+            <MemoSection icon={FileText} num="09" title="Supporting evidence" aside={<span className="microlabel">Audit log</span>}>
               <Card>
                 <SectionLabel className="mb-2">Decision path</SectionLabel>
                 <div className="bg-code rounded-lg px-4 py-4 font-mono text-xs leading-6 overflow-x-auto scroll-thin">
@@ -596,7 +596,7 @@ export function CompanyMemo({
                 <SectionLabel className={v.text}>Recommendation</SectionLabel>
                 <div className={cn("text-2xl font-semibold tracking-tight mt-1.5", v.text)}>{v.action}</div>
                 <div className="mt-3.5 flex items-baseline gap-2">
-                  <span className={cn("font-mono text-3xl font-semibold tabular", v.text)}>{Math.round(s.pursuit_probability * 100)}%</span>
+                  <span className={cn("font-mono text-3xl font-semibold tabular", v.text)}>{fmtProb(s.pursuit_probability)}</span>
                   <span className="text-[12px] text-ink-2 leading-snug">calibrated<br />pursue-probability</span>
                 </div>
                 <div className="mt-3 pt-3 border-t border-line-2 grid grid-cols-2 gap-y-1.5 gap-x-3 text-[11px]">

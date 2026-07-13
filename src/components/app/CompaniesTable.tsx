@@ -5,7 +5,7 @@ import {
   Search, Download, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, Inbox,
 } from "lucide-react";
 import type { Startup } from "@/lib/mock-data";
-import { VERDICT, countVerdicts, fmtMoney0 } from "@/lib/format";
+import { VERDICT, countVerdicts, fmtMoney0, VERDICT_ORDER } from "@/lib/format";
 import { exportCsv } from "@/lib/import";
 import { Button, VerdictBadge, EmptyState, Badge, ScoreRing } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
@@ -54,6 +54,19 @@ export function CompaniesTable({
       return mul * (((a[key] as number) ?? 0) - ((b[key] as number) ?? 0));
     });
   }, [data, filter, search, sort]);
+
+  // Stable pipeline rank: full dataset ordered by verdict then score, independent
+  // of the current filter/sort. Shown in the "#" column so it doesn't reshuffle
+  // when the analyst re-sorts or filters.
+  const rankById = useMemo(() => {
+    const order = [...data].sort(
+      (a, b) =>
+        VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict] || b.score - a.score
+    );
+    const m = new Map<number, number>();
+    order.forEach((s, i) => m.set(s.id, i + 1));
+    return m;
+  }, [data]);
 
   const toggleSort = (key: SortKey) =>
     setSort((s) =>
@@ -158,9 +171,17 @@ export function CompaniesTable({
                   <tr
                     key={s.id}
                     onClick={() => onOpen(s.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onOpen(s.id);
+                      }
+                    }}
                     className="border-b border-line-2 last:border-0 hover:bg-tint/50 cursor-pointer transition-colors group"
                   >
-                    <td className="px-4 py-3 font-mono text-[12px] text-ink-3 tabular">{i + 1}</td>
+                    <td className="px-4 py-3 font-mono text-[12px] text-ink-3 tabular">{rankById.get(s.id)}</td>
                     <td className="px-2 py-3">
                       <ScoreCell score={s.score} verdict={s.verdict} pillars={s.pillars} />
                     </td>
@@ -195,7 +216,7 @@ export function CompaniesTable({
                 onClick={() => onOpen(s.id)}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-tint/50 transition-colors"
               >
-                <span className="font-mono text-[11px] text-ink-3 w-4 tabular">{i + 1}</span>
+                <span className="font-mono text-[11px] text-ink-3 w-4 tabular">{rankById.get(s.id)}</span>
                 <ScoreCell score={s.score} verdict={s.verdict} pillars={s.pillars} />
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-medium text-ink truncate">{s.name}</div>

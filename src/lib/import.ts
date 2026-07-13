@@ -194,6 +194,13 @@ export function downloadCsvTemplate() {
 }
 
 export function exportCsv(data: Startup[]) {
+  // RFC-4180 field quoting: wrap every cell in double quotes and double any
+  // embedded quote, so a company name like "Acme, Inc." or a description with
+  // a comma no longer shifts every column after it.
+  const csvCell = (v: string | number) => {
+    const s = String(v);
+    return `"${s.replace(/"/g, '""')}"`;
+  };
   const rows = [
     ["Rank", "Company", "Industry", "Model", "Stage", "Team", "Funding USD", "Score", "Verdict", "Confidence"],
     ...[...data]
@@ -204,7 +211,7 @@ export function exportCsv(data: Startup[]) {
       ]),
   ];
   downloadBlob(
-    rows.map((r) => r.join(",")).join("\n"),
+    rows.map((r) => r.map(csvCell).join(",")).join("\n"),
     "dealflow-screening-results.csv"
   );
 }

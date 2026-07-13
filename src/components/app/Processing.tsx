@@ -11,7 +11,7 @@ const STEPS = [
   { icon: Users, label: "Scoring team & founders", detail: "Execution track record, depth, technical moat" },
   { icon: LineChart, label: "Modelling market growth", detail: "Log-linear regression on sector TAM" },
   { icon: Activity, label: "Assessing traction & risk", detail: "Revenue, runway, competitive density" },
-  { icon: ListOrdered, label: "Ranking by conviction", detail: "Weighting four pillars into one score" },
+  { icon: ListOrdered, label: "Ranking by conviction", detail: "Ranking on the calibrated signal" },
 ];
 
 export function Processing({
@@ -52,7 +52,7 @@ export function Processing({
   const shown = Math.round(progress * companies.length);
 
   return (
-    <div className="min-h-dvh bg-canvas text-ink grid place-items-center px-5">
+    <div className="theme-dark min-h-dvh bg-canvas text-ink grid place-items-center px-5">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center text-center">
           <div className="relative">

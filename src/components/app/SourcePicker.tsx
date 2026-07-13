@@ -51,7 +51,7 @@ export function SourcePicker({
   }, [onData]);
 
   return (
-    <div className="min-h-dvh bg-canvas text-ink flex flex-col">
+    <div className="theme-dark min-h-dvh bg-canvas text-ink flex flex-col">
       {/* top bar */}
       <div className="border-b border-line bg-pane/70 backdrop-blur">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 sm:px-8 h-16">

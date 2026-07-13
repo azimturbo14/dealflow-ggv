@@ -2,7 +2,7 @@
 
 import { FileInput, SlidersHorizontal, ScrollText } from "lucide-react";
 import { Card, Meter, SectionLabel } from "@/components/app/primitives";
-import { CALIBRATION } from "@/lib/calibration";
+import { CALIBRATION, scoreFromProbability } from "@/lib/calibration";
 import { DEFAULT_PILLAR_WEIGHTS } from "@/lib/mock-data";
 
 const STEPS = [
@@ -46,6 +46,12 @@ function compositeSharePct(key: keyof typeof DEFAULT_PILLAR_WEIGHTS): number {
 const TONE_HEX = { accent: "bg-accent", good: "bg-good", warn: "bg-warn", ink: "bg-ink-3" };
 
 export function Methodology() {
+  // Real verdict cutoffs, derived from the calibrated probability (not the
+  // legacy 70/45 bands that no longer match the engine). Scores are integers,
+  // so Pursue ≥ 59 and Review ≥ 55; thesis gating can still cap a strong
+  // company to Review or a good-but-off-mandate one to Pass.
+  const pursueScore = Math.round(scoreFromProbability(CALIBRATION.pursueP));
+  const reviewScore = Math.round(scoreFromProbability(CALIBRATION.reviewP));
   return (
     <div className="animate-fade-in mx-auto max-w-3xl px-5 sm:px-8 py-7 space-y-6">
       <div>
@@ -107,9 +113,9 @@ export function Methodology() {
         </div>
         <div className="mt-5 pt-4 border-t border-line-2 grid grid-cols-3 gap-3 text-center">
           {[
-            { v: "≥ 70", l: "Pursue", c: "text-good" },
-            { v: "45–69", l: "Review", c: "text-warn" },
-            { v: "< 45", l: "Pass", c: "text-bad" },
+            { v: `≥ ${pursueScore}`, l: "Pursue", c: "text-good" },
+            { v: `${reviewScore}–${pursueScore - 1}`, l: "Review", c: "text-warn" },
+            { v: `< ${reviewScore}`, l: "Pass", c: "text-bad" },
           ].map((t) => (
             <div key={t.l} className="bg-canvas border border-line rounded-lg py-2.5">
               <div className={`font-mono text-lg font-semibold tabular ${t.c}`}>{t.v}</div>
@@ -117,6 +123,9 @@ export function Methodology() {
             </div>
           ))}
         </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-ink-3">
+          Quality cutoffs before thesis gating — calibrated on {CALIBRATION.fitN.positives + CALIBRATION.fitN.negatives} decisions (LOO AUC {CALIBRATION.looAuc.toFixed(2)}). A strong but off-thesis company is capped to Review by the mandate.
+        </p>
       </Card>
 
       <div className="bg-code rounded-xl px-6 py-6">
@@ -130,7 +139,7 @@ export function Methodology() {
         </p>
         <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
           {[
-            { value: "4 pillars", label: "Weighted 25 / 30 / 30 / 15" },
+            { value: "Traction", label: "100% of the composite weight" },
             { value: "OLS", label: "Log-linear market regression" },
             { value: "5-year", label: "Forward market projection" },
             { value: "Confidence", label: "Scaled by data completeness" },

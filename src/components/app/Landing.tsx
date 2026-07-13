@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/app/Logo";
 
-/* ---------- illustrative data for the product preview (not the demo cohort) ---------- */
+/* ---------- product preview (numbers match the live demo cohort) ---------- */
 const PREVIEW_ROWS = [
   { rank: 1, name: "Helios Robotics", sector: "DeepTech · B2B", score: 88, tone: "var(--good)" },
   { rank: 2, name: "Cadence Fintech", sector: "Fintech · B2B", score: 82, tone: "var(--good)" },
@@ -37,16 +37,16 @@ function ProductPreview() {
         <span className="w-2.5 h-2.5 rounded-full bg-ink-3/30" />
         <span className="w-2.5 h-2.5 rounded-full bg-ink-3/20" />
         <div className="ml-3 flex items-center gap-1.5 text-[11px] text-ink-3">
-          <Search className="w-3 h-3" /> 428 companies · ranked in 3.1s
+          <Search className="w-3 h-3" /> Demo cohort · 50 companies
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3">
         {/* metrics rail */}
         <div className="hidden sm:flex flex-col gap-3 p-4 border-r border-line-2 bg-canvas/40">
           {[
-            { l: "Screened", v: "428", t: "text-ink" },
-            { l: "High conviction", v: "37", t: "text-good" },
-            { l: "Median score", v: "58", t: "text-ink" },
+            { l: "Screened", v: "50", t: "text-ink" },
+            { l: "High conviction", v: "19", t: "text-good" },
+            { l: "Median score", v: "70", t: "text-ink" },
           ].map((m) => (
             <div key={m.l} className="bg-pane border border-line rounded-lg px-3 py-2.5">
               <div className="microlabel text-[9px]">{m.l}</div>
@@ -89,8 +89,8 @@ const CAPABILITIES = [
 ];
 
 const STEPS = [
-  { n: "01", icon: FileSearch, title: "Import Pipeline", body: "Upload spreadsheets or connect data sources — or explore a live demo cohort." },
-  { n: "02", icon: Zap, title: "AI-Powered Scoring", body: "DealFlow evaluates across team, traction, market and deal fit — with a market regression and confidence rating." },
+  { n: "01", icon: FileSearch, title: "Import Pipeline", body: "Upload a spreadsheet of your pipeline, or explore the live demo cohort." },
+  { n: "02", icon: Zap, title: "AI-Powered Scoring", body: "DealFlow ranks on a calibrated traction signal, with team, market and macro shown as qualitative context — plus a market regression and confidence rating." },
   { n: "03", icon: LineChart, title: "Data-Driven Shortlist", body: "Act on a clear ranking with transparent rationale: thesis, evidence, risks and a recommended next step." },
 ];
 
@@ -168,8 +168,8 @@ export function Landing({
       <section className="border-y border-line">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
           {[
-            { v: "3.1s", l: "to rank 400+ companies" },
-            { v: "4", l: "weighted scoring pillars" },
+            { v: "2.6s", l: "to screen a cohort" },
+            { v: "Traction", l: "calibrated ranking signal" },
             { v: "100%", l: "of scores fully explained" },
             { v: "0", l: "data leaves the browser" },
           ].map((s) => (

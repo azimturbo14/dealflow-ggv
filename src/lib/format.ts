@@ -46,6 +46,15 @@ export const countVerdicts = (data: Startup[]): Counts => ({
   low: data.filter((s) => s.verdict === "low").length,
 });
 
+/** Stable sort order for verdicts (used to rank by verdict before score/probability). */
+export const VERDICT_ORDER: Record<Verdict, number> = { high: 0, moderate: 1, low: 2 };
+
+/** Calibrated pursue-probability, displayed so it never reads as a false-certain 100%.
+ *  Anything at/above 0.95 is shown as ">95%" — the small-sample AUC (0.84) does not
+ *  support presenting any deal as a near-certain pursue. */
+export const fmtProb = (p: number): string =>
+  p >= 0.95 ? ">95%" : `${Math.round(p * 100)}%`;
+
 /* ---------- formatters ---------- */
 
 export const fmtMoney = (v: number): string =>
