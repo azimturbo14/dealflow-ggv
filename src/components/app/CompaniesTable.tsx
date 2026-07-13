@@ -10,7 +10,7 @@ import { exportCsv } from "@/lib/import";
 import { Button, VerdictBadge, EmptyState, Badge, ScoreRing } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
 
-type Filter = "all" | "high" | "moderate" | "low";
+export type Filter = "all" | "high" | "moderate" | "low";
 type SortKey = "score" | "name" | "team_size" | "funding_total_usd" | "ask_amount_usd" | "confidence";
 
 const SORTS: { key: SortKey; label: string; numeric: boolean }[] = [
@@ -26,13 +26,16 @@ export function CompaniesTable({
   data,
   onOpen,
   onNew,
+  filter,
+  onFilterChange,
 }: {
   data: Startup[];
   onOpen: (id: number) => void;
   onNew: () => void;
+  filter: Filter;
+  onFilterChange: (f: Filter) => void;
 }) {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "score", dir: "desc" });
   const counts = useMemo(() => countVerdicts(data), [data]);
 
@@ -121,7 +124,7 @@ export function CompaniesTable({
           {tabs.map((t) => (
             <button
               key={t.key}
-              onClick={() => setFilter(t.key)}
+              onClick={() => onFilterChange(t.key)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors",
                 filter === t.key ? "bg-ink text-canvas" : "text-ink-2 hover:bg-tint"
@@ -142,7 +145,7 @@ export function CompaniesTable({
             title="No companies match"
             description="Try clearing the search or switching the verdict filter."
             action={
-              <Button variant="outline" size="sm" onClick={() => { setSearch(""); setFilter("all"); }}>
+              <Button variant="outline" size="sm" onClick={() => { setSearch(""); onFilterChange("all"); }}>
                 Reset filters
               </Button>
             }

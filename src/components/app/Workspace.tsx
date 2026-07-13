@@ -5,12 +5,12 @@ import {
   LayoutDashboard, Table2, BookOpen, Plus, RefreshCw, Menu, X,
 } from "lucide-react";
 import type { Startup } from "@/lib/mock-data";
-import { countVerdicts } from "@/lib/format";
+import { countVerdicts, type Counts } from "@/lib/format";
 import { Logo } from "@/components/app/Logo";
 import { Button } from "@/components/app/primitives";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { Dashboard } from "@/components/app/Dashboard";
-import { CompaniesTable } from "@/components/app/CompaniesTable";
+import { CompaniesTable, type Filter } from "@/components/app/CompaniesTable";
 import { CompanyMemo } from "@/components/app/CompanyMemo";
 import { Methodology } from "@/components/app/Methodology";
 import { EvaluateModal } from "@/components/app/EvaluateModal";
@@ -34,6 +34,8 @@ export function Workspace({
   const [returnTo, setReturnTo] = useState<Section>("dashboard");
   const [modalOpen, setModalOpen] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
+  // Lifted from CompaniesTable so the sidebar verdict-split can drive the list filter.
+  const [verdictFilter, setVerdictFilter] = useState<Filter>("all");
 
   const counts = useMemo(() => countVerdicts(companies), [companies]);
   const nextId = useMemo(
@@ -65,6 +67,17 @@ export function Workspace({
     window.scrollTo({ top: 0 });
   };
 
+  // Nav clicks reset to the full list; the verdict-split shortcuts set a filter.
+  const onNav = (s: Section) => {
+    if (s === "companies") setVerdictFilter("all");
+    go(s);
+  };
+
+  const showVerdict = (v: Filter) => {
+    setVerdictFilter(v);
+    go("companies");
+  };
+
   const handleCreate = (created: Startup[]) => {
     if (created.length === 0) return;
     onAddCompanies(created);
@@ -84,7 +97,7 @@ export function Workspace({
   ];
 
   const navItems = (
-    <NavItems nav={nav} section={section} openId={openId} onGo={go} />
+    <NavItems nav={nav} section={section} openId={openId} onGo={onNav} />
   );
 
   return (
@@ -102,17 +115,11 @@ export function Workspace({
         <nav className="flex-1 p-2.5 pt-0 space-y-0.5 overflow-y-auto scroll-thin">
           {navItems}
           <div className="pt-5 pb-1.5 px-2.5 microlabel text-[9px]">Verdict split</div>
-          {[
-            { label: "Pursue", dot: "bg-good", n: counts.high },
-            { label: "Review", dot: "bg-warn", n: counts.moderate },
-            { label: "Pass", dot: "bg-bad", n: counts.low },
-          ].map((v) => (
-            <div key={v.label} className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-ink-2">
-              <span className={cn("w-2 h-2 rounded-full", v.dot)} />
-              {v.label}
-              <span className="ml-auto font-mono text-[11px] text-ink-3 tabular">{v.n}</span>
-            </div>
-          ))}
+          <VerdictButtons
+            counts={counts}
+            activeKey={section === "companies" ? verdictFilter : null}
+            onShow={showVerdict}
+          />
         </nav>
         <div className="p-3 border-t border-line space-y-2.5">
           <div className="text-[11px] text-ink-3 truncate" title={sourceLabel}>{sourceLabel}</div>
@@ -142,6 +149,12 @@ export function Workspace({
         {mobileNav && (
           <div className="border-t border-line p-2.5 space-y-0.5 animate-fade-in">
             {navItems}
+            <div className="pt-3 pb-1.5 px-2.5 microlabel text-[9px]">Verdict split</div>
+            <VerdictButtons
+              counts={counts}
+              activeKey={section === "companies" ? verdictFilter : null}
+              onShow={showVerdict}
+            />
             <button onClick={onReset} className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-ink-2 hover:bg-tint transition-colors">
               <RefreshCw className="w-4 h-4" /> New screening
             </button>
@@ -154,9 +167,9 @@ export function Workspace({
         {selected ? (
           <CompanyMemo startup={selected} all={companies} onBack={closeMemo} onOpen={open} />
         ) : section === "dashboard" ? (
-          <Dashboard data={companies} onOpen={open} onViewAll={() => go("companies")} />
+          <Dashboard data={companies} onOpen={open} onViewAll={() => { setVerdictFilter("all"); go("companies"); }} />
         ) : section === "companies" ? (
-          <CompaniesTable data={companies} onOpen={open} onNew={() => setModalOpen(true)} />
+          <CompaniesTable data={companies} onOpen={open} onNew={() => setModalOpen(true)} filter={verdictFilter} onFilterChange={setVerdictFilter} />
         ) : (
           <Methodology />
         )}
@@ -193,6 +206,46 @@ function NavItems({
             {n.badge != null && (
               <span className="ml-auto font-mono text-[11px] text-ink-3 tabular">{n.badge}</span>
             )}
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
+function VerdictButtons({
+  counts,
+  activeKey,
+  onShow,
+}: {
+  counts: Counts;
+  activeKey: Filter | null;
+  onShow: (v: Filter) => void;
+}) {
+  const items: { label: string; key: Filter; dot: string; n: number }[] = [
+    { label: "Pursue", key: "high", dot: "bg-good", n: counts.high },
+    { label: "Review", key: "moderate", dot: "bg-warn", n: counts.moderate },
+    { label: "Pass", key: "low", dot: "bg-bad", n: counts.low },
+  ];
+  return (
+    <>
+      {items.map((v) => {
+        const active = activeKey === v.key;
+        return (
+          <button
+            key={v.label}
+            onClick={() => onShow(v.key)}
+            aria-label={`Show ${v.label} companies`}
+            className={cn(
+              "w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-left transition-colors",
+              active
+                ? "bg-accent-soft text-accent-deep font-medium"
+                : "text-ink-2 hover:bg-tint"
+            )}
+          >
+            <span className={cn("w-2 h-2 rounded-full", v.dot)} />
+            {v.label}
+            <span className="ml-auto font-mono text-[11px] text-ink-3 tabular">{v.n}</span>
           </button>
         );
       })}
