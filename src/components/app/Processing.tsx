@@ -5,6 +5,7 @@ import { Check, Loader2, Users, LineChart, Activity, ListOrdered, ScanSearch } f
 import { countVerdicts, type Counts } from "@/lib/format";
 import type { Startup } from "@/lib/mock-data";
 import { LogoMark } from "@/components/app/Logo";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 
 const STEPS = [
   { icon: ScanSearch, label: "Reading companies", detail: "Normalising fields and filling gaps" },
@@ -52,7 +53,10 @@ export function Processing({
   const shown = Math.round(progress * companies.length);
 
   return (
-    <div className="min-h-dvh bg-canvas text-ink grid place-items-center px-5">
+    <div className="relative min-h-dvh bg-canvas text-ink grid place-items-center px-5">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center text-center">
           <div className="relative">
