@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { Startup } from "@/lib/mock-data";
+import { mockStartups, type Startup } from "@/lib/mock-data";
 import { Landing } from "@/components/app/Landing";
 import { SourcePicker, type SourceKind } from "@/components/app/SourcePicker";
 import { Processing } from "@/components/app/Processing";
@@ -25,6 +25,12 @@ export default function Home() {
     []
   );
 
+  // "Explore demo" loads the demo cohort straight into processing — no extra step.
+  const startDemo = useCallback(() => {
+    const cohort = mockStartups.map((s) => ({ ...s }));
+    handleData(cohort, "demo", "Demo cohort · 50 companies");
+  }, [handleData]);
+
   const handleAddCompanies = useCallback((created: Startup[]) => {
     setCompanies((prev) => [...created, ...prev]);
   }, []);
@@ -37,7 +43,7 @@ export default function Home() {
 
   switch (phase) {
     case "landing":
-      return <Landing onStart={startScreening} onDemo={startScreening} />;
+      return <Landing onStart={startScreening} onDemo={startDemo} />;
     case "source":
       return (
         <SourcePicker onData={handleData} onBack={() => setPhase("landing")} />

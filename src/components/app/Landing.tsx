@@ -5,8 +5,9 @@ import {
   Search, FileSearch, Scale, CircleCheck, Quote,
 } from "lucide-react";
 import { Logo } from "@/components/app/Logo";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 
-/* ---------- illustrative data for the product preview (not the demo cohort) ---------- */
+/* ---------- product preview (numbers match the live demo cohort) ---------- */
 const PREVIEW_ROWS = [
   { rank: 1, name: "Helios Robotics", sector: "DeepTech · B2B", score: 88, tone: "var(--good)" },
   { rank: 2, name: "Cadence Fintech", sector: "Fintech · B2B", score: 82, tone: "var(--good)" },
@@ -37,16 +38,16 @@ function ProductPreview() {
         <span className="w-2.5 h-2.5 rounded-full bg-ink-3/30" />
         <span className="w-2.5 h-2.5 rounded-full bg-ink-3/20" />
         <div className="ml-3 flex items-center gap-1.5 text-[11px] text-ink-3">
-          <Search className="w-3 h-3" /> 428 companies · ranked in 3.1s
+          <Search className="w-3 h-3" /> Demo cohort · 50 companies
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3">
         {/* metrics rail */}
         <div className="hidden sm:flex flex-col gap-3 p-4 border-r border-line-2 bg-canvas/40">
           {[
-            { l: "Screened", v: "428", t: "text-ink" },
-            { l: "High conviction", v: "37", t: "text-good" },
-            { l: "Median score", v: "58", t: "text-ink" },
+            { l: "Screened", v: "50", t: "text-ink" },
+            { l: "High conviction", v: "19", t: "text-good" },
+            { l: "Median score", v: "70", t: "text-ink" },
           ].map((m) => (
             <div key={m.l} className="bg-pane border border-line rounded-lg px-3 py-2.5">
               <div className="microlabel text-[9px]">{m.l}</div>
@@ -89,8 +90,8 @@ const CAPABILITIES = [
 ];
 
 const STEPS = [
-  { n: "01", icon: FileSearch, title: "Import Pipeline", body: "Upload spreadsheets or connect data sources — or explore a live demo cohort." },
-  { n: "02", icon: Zap, title: "AI-Powered Scoring", body: "DealFlow evaluates across team, traction, market and deal fit — with a market regression and confidence rating." },
+  { n: "01", icon: FileSearch, title: "Import Pipeline", body: "Upload a spreadsheet of your pipeline, or explore the live demo cohort." },
+  { n: "02", icon: Zap, title: "AI-Powered Scoring", body: "DealFlow ranks on a calibrated traction signal, with team, market and macro shown as qualitative context — plus a market regression and confidence rating." },
   { n: "03", icon: LineChart, title: "Data-Driven Shortlist", body: "Act on a clear ranking with transparent rationale: thesis, evidence, risks and a recommended next step." },
 ];
 
@@ -109,7 +110,7 @@ export function Landing({
   onDemo: () => void;
 }) {
   return (
-    <div className="theme-dark bg-canvas text-ink min-h-dvh overflow-x-hidden scroll-thin">
+    <div className="bg-canvas text-ink min-h-dvh overflow-x-hidden scroll-thin">
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-line/70 bg-canvas/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 h-16">
@@ -120,10 +121,11 @@ export function Landing({
             <a href="#trust" className="hover:text-ink transition-colors">Why it's trusted</a>
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <button onClick={onDemo} className="hidden sm:inline-flex text-[13px] font-medium text-ink-2 hover:text-ink px-3 py-2 rounded-lg transition-colors">
               Explore demo
             </button>
-            <button onClick={onStart} className="inline-flex items-center gap-1.5 text-[13px] font-medium bg-accent text-[#04120f] px-3.5 py-2 rounded-lg hover:bg-accent-deep transition-colors">
+            <button onClick={onStart} className="inline-flex items-center gap-1.5 text-[13px] font-medium bg-accent text-accent-fg px-3.5 py-2 rounded-lg hover:bg-accent-deep transition-colors">
               Start screening <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -146,7 +148,7 @@ export function Landing({
             Automate the first-pass screening of startup pipelines and find the few companies worth your conviction.
           </p>
           <div className="animate-fade-up flex flex-col sm:flex-row items-center justify-center gap-3 mt-9" style={{ animationDelay: "0.15s" }}>
-            <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-6 py-3 rounded-lg hover:bg-accent-deep transition-colors shadow-[0_8px_30px_-8px_rgba(45,212,191,0.5)]">
+            <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold text-sm px-6 py-3 rounded-lg hover:bg-accent-deep transition-colors shadow-[0_8px_30px_-8px_rgba(45,212,191,0.5)]">
               Start screening <ArrowRight className="w-4 h-4" />
             </button>
             <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-line bg-pane/60 text-ink font-medium text-sm px-6 py-3 rounded-lg hover:bg-raise transition-colors">
@@ -168,8 +170,8 @@ export function Landing({
       <section className="border-y border-line">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
           {[
-            { v: "3.1s", l: "to rank 400+ companies" },
-            { v: "4", l: "weighted scoring pillars" },
+            { v: "2.6s", l: "to screen a cohort" },
+            { v: "Traction", l: "calibrated ranking signal" },
             { v: "100%", l: "of scores fully explained" },
             { v: "0", l: "data leaves the browser" },
           ].map((s) => (
@@ -265,7 +267,7 @@ export function Landing({
                 Screen your pipeline in seconds. Spend your hours on the companies that earn them.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-9">
-                <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-[#04120f] font-semibold text-sm px-7 py-3 rounded-lg hover:bg-accent-deep transition-colors">
+                <button onClick={onStart} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent text-accent-fg font-semibold text-sm px-7 py-3 rounded-lg hover:bg-accent-deep transition-colors">
                   Start screening <ArrowRight className="w-4 h-4" />
                 </button>
                 <button onClick={onDemo} className="w-full sm:w-auto inline-flex items-center justify-center border border-line bg-pane text-ink font-medium text-sm px-7 py-3 rounded-lg hover:bg-raise transition-colors">

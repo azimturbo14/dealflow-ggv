@@ -275,6 +275,16 @@ export interface StartupInput {
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const fmtUsd = (v: number) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M` : v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`;
 
+// Maps a country's FDI-trend narrative onto a 1–3 score so the "Capital / FDI
+// Trend" macro factor actually varies instead of being a constant +3/3 that
+// ignores the trend text. Higher = stronger inbound investment climate.
+const fdiScore = (trend: string): 1 | 2 | 3 => {
+  const t = trend.toLowerCase();
+  if (/(rising|record|strong|deep|largest|sharp|accelerat|boom)/.test(t)) return 3;
+  if (/(volatile|constrain|impair|fragile|depreciat|high fx|severe|winter)/.test(t)) return 1;
+  return 2;
+};
+
 // Four-pillar scoring engine — shared by demo cohort, manual entry, and CSV batch
 export function evaluateStartup(input: StartupInput, id: number, jitter = 0, weights: PillarWeights = DEFAULT_PILLAR_WEIGHTS): Startup {
   const {
@@ -506,13 +516,14 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0, wei
   });
 
   // FDI / ecosystem trend
+  const fdi = fdiScore(macro.foreign_investment_trend);
   macroF.push({
     criterion: 'Capital / FDI Trend',
     value: macro.foreign_investment_trend,
-    impact: 3, max_impact: 3,
-    direction: 'positive',
+    impact: fdi, max_impact: 3,
+    direction: fdi >= 3 ? 'positive' : fdi >= 2 ? 'neutral' : 'negative',
     explanation: `Direction of foreign investment into ${cc.name} shapes follow-on and exit optionality: ${macro.foreign_investment_trend}.`,
-    threshold: 'Rising FDI: +3',
+    threshold: 'Rising FDI: +3 · steady/selective: +2 · weak/volatile: +1',
   });
   const macroScore = macroF.reduce((s, f) => s + f.impact, 0);
 
@@ -605,7 +616,7 @@ export function evaluateStartup(input: StartupInput, id: number, jitter = 0, wei
     : thesis_fit.gate === 'cap-review' && qualityVerdict === 'high'
       ? ' — capped to REVIEW (strong company, off current thesis)'
       : '';
-  decision_path.push(`Calibrated pursue-probability → ${Math.round(pursuit_probability * 100)}% (quality ${score}/100)`);
+  decision_path.push(`Calibrated pursue-probability → ${Math.min(95, Math.round(pursuit_probability * 100))}% (quality ${score}/100)`);
   decision_path.push(`Thesis fit → ${thesis_fit.band} (${thesis_fit.score}/100)`);
   decision_path.push(`→ ${verdict === 'high' ? 'PURSUE' : verdict === 'moderate' ? 'REVIEW' : 'PASS'}${gateNote}`);
 
@@ -752,7 +763,7 @@ function generateStartups(): Startup[] {
           monthly_burn_usd: funding_rounds > 0 ? Math.round((rand() * 40000 + 5000) / 1000) * 1000 : undefined,
         },
         i + 1,
-        Math.round(rand() * 8 - 4)
+        0
       )
     );
   }

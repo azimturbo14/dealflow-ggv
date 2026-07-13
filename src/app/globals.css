@@ -34,6 +34,11 @@
   --color-bad-soft: var(--bad-soft);
   --color-code: var(--code);
 
+  /* readable foreground ON accent / danger fills (light accent is dark teal,
+     dark accent is light teal — so the on-fill text swaps per theme) */
+  --color-accent-fg: var(--accent-fg);
+  --color-bad-fg: var(--bad-fg);
+
   /* type */
   --font-sans: var(--font-instrument);
   --font-mono: var(--font-plex-mono);
@@ -84,6 +89,8 @@
   --accent: #0f766e;
   --accent-deep: #0b5750;
   --accent-soft: #e6f1ef;
+  --accent-fg: #ffffff;
+  --bad-fg: #ffffff;
 
   /* verdicts */
   --good: #15803d;
@@ -127,7 +134,7 @@
 }
 
 /* ---------- Dark scope (the landing & marketing surfaces) ---------- */
-.theme-dark {
+.dark {
   --canvas: #0a0b0d;
   --pane: #101216;
   --raise: #15181d;
@@ -141,6 +148,8 @@
   --accent: #2dd4bf;
   --accent-deep: #14b8a6;
   --accent-soft: rgba(45, 212, 191, 0.12);
+  --accent-fg: #04120f;
+  --bad-fg: #04120f;
 
   --good: #4ade80;
   --good-soft: rgba(74, 222, 128, 0.12);

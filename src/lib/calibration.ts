@@ -309,3 +309,12 @@ export function pursuitProbability(score: number, cal: Calibration = CALIBRATION
 export function baseVerdictFromProbability(p: number, cal: Calibration = CALIBRATION): 'high' | 'moderate' | 'low' {
   return p >= cal.pursueP ? 'high' : p >= cal.reviewP ? 'moderate' : 'low';
 }
+
+/** Inverse of {@link pursuitProbability}: the quality score at which the calibrated
+ *  pursue-probability equals `p`. Used to render the *real* verdict cutoffs on the
+ *  Methodology page (e.g. Pursue ≈ 58.5, Review ≈ 55.2) instead of the legacy
+ *  70 / 45 bands that no longer match the engine. */
+export function scoreFromProbability(p: number, cal: Calibration = CALIBRATION): number {
+  const clamped = Math.min(0.999, Math.max(0.001, p));
+  return 50 + 10 * ((Math.log(clamped / (1 - clamped)) - cal.b) / cal.a);
+}

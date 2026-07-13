@@ -11,7 +11,7 @@ const STEPS = [
   { icon: Users, label: "Scoring team & founders", detail: "Execution track record, depth, technical moat" },
   { icon: LineChart, label: "Modelling market growth", detail: "Log-linear regression on sector TAM" },
   { icon: Activity, label: "Assessing traction & risk", detail: "Revenue, runway, competitive density" },
-  { icon: ListOrdered, label: "Ranking by conviction", detail: "Weighting four pillars into one score" },
+  { icon: ListOrdered, label: "Ranking by conviction", detail: "Ranking on the calibrated signal" },
 ];
 
 export function Processing({
@@ -98,7 +98,7 @@ export function Processing({
                     state === "done"
                       ? "bg-good-soft text-good"
                       : state === "active"
-                      ? "bg-accent text-white"
+                      ? "bg-accent text-accent-fg"
                       : "bg-tint text-ink-3"
                   }`}
                 >

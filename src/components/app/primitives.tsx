@@ -16,11 +16,11 @@ const BTN_VARIANT: Record<ButtonVariant, string> = {
   primary:
     "bg-ink text-canvas hover:bg-ink/90 active:scale-[0.985] shadow-[var(--shadow-xs)]",
   brand:
-    "bg-accent text-white hover:bg-accent-deep active:scale-[0.985] shadow-[var(--shadow-xs)]",
+    "bg-accent text-accent-fg hover:bg-accent-deep active:scale-[0.985] shadow-[var(--shadow-xs)]",
   outline:
     "bg-pane text-ink-2 border border-line hover:bg-tint hover:text-ink hover:border-line",
   ghost: "text-ink-2 hover:bg-tint hover:text-ink",
-  danger: "bg-bad text-white hover:brightness-95 active:scale-[0.985]",
+  danger: "bg-bad text-bad-fg hover:brightness-95 active:scale-[0.985]",
 };
 
 const BTN_SIZE: Record<ButtonSize, string> = {

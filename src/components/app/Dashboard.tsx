@@ -6,7 +6,7 @@ import {
   Trophy, AlertTriangle, Target,
 } from "lucide-react";
 import type { Startup } from "@/lib/mock-data";
-import { VERDICT, countVerdicts, pct, fmtMoney0 } from "@/lib/format";
+import { VERDICT, countVerdicts, pct, fmtMoney0, VERDICT_ORDER } from "@/lib/format";
 import { exportCsv } from "@/lib/import";
 import {
   Card, StatTile, VerdictBadge, ScoreRing, Button, Meter, SectionLabel,
@@ -16,9 +16,18 @@ import {
 
 function buildInsights(data: Startup[]) {
   if (data.length === 0) return [];
-  const sorted = [...data].sort((a, b) => b.score - a.score);
+  // Rank by verdict first, then calibrated probability — so the lead company is
+  // the strongest *pursue* candidate, never a Review/Pass one wearing a
+  // "high-conviction" label that contradicts its own badge.
+  const ranked = [...data].sort(
+    (a, b) =>
+      VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict] ||
+      b.pursuit_probability - a.pursuit_probability ||
+      b.score - a.score
+  );
   const counts = countVerdicts(data);
-  const top = sorted[0];
+  const top = ranked[0];
+  const strongest = top.pillars.slice().sort((a, b) => b.score / b.max - a.score / a.max)[0];
 
   // strongest sector by average score (min 2 companies)
   const bySector = new Map<string, number[]>();
@@ -35,11 +44,22 @@ function buildInsights(data: Startup[]) {
   const lowConfidence = data.filter((s) => s.confidence < 65).length;
   const insights: { icon: typeof Trophy; tone: "good" | "warn" | "accent"; title: string; body: string }[] = [];
 
+  // Lead insight is verdict-aware: a Review/Pass company is never described as
+  // "clearing the high-conviction bar".
+  const leadTone: "good" | "warn" | "accent" =
+    top.verdict === "high" ? "good" : top.verdict === "moderate" ? "accent" : "warn";
+  const leadBody =
+    top.verdict === "high"
+      ? `Scoring ${top.score}/100, it clears the high-conviction bar on the strength of its ${strongest.label.toLowerCase()}. ${counts.high} of ${counts.all} companies rank as pursue-worthy.`
+      : top.verdict === "moderate"
+      ? `It leads the current ranking at ${top.score}/100 on the calibrated signal, but is capped to Review by fund-thesis fit${top.thesis_fit.gate !== "none" ? ` (${top.thesis_fit.gate === "hard-pass" ? "off-mandate" : "off-thesis"})` : ""} — worth a closer pass. ${counts.high} of ${counts.all} companies rank as pursue-worthy.`
+      : `It tops the ranking at ${top.score}/100, though the verdict is Pass — review the thesis-fit reasons before acting. ${counts.high} of ${counts.all} companies rank as pursue-worthy.`;
+
   insights.push({
     icon: Trophy,
-    tone: "good",
+    tone: leadTone,
     title: `${top.name} leads the pipeline`,
-    body: `Scoring ${top.score}/100, it clears the high-conviction bar on the strength of its ${top.pillars.slice().sort((a, b) => b.score / b.max - a.score / a.max)[0].label.toLowerCase()}. ${counts.high} of ${counts.all} companies rank as pursue-worthy.`,
+    body: leadBody,
   });
 
   if (sectorAvgs.length > 0) {
@@ -107,7 +127,20 @@ export function Dashboard({
   }, [data]);
   const maxSector = Math.max(1, ...sectors.map((s) => s.n));
 
-  const top = sorted.slice(0, 6);
+  // "Highest potential" ranks by verdict first, then calibrated probability —
+  // Pursue rows always sit above Review/Pass ones, so the title is honest.
+  const top = useMemo(
+    () =>
+      [...data]
+        .sort(
+          (a, b) =>
+            VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict] ||
+            b.pursuit_probability - a.pursuit_probability ||
+            b.score - a.score
+        )
+        .slice(0, 6),
+    [data]
+  );
 
   return (
     <div className="animate-fade-in mx-auto max-w-6xl px-5 sm:px-8 py-7 space-y-8">
@@ -176,7 +209,8 @@ export function Dashboard({
         <Card title="Score distribution" className="lg:col-span-3">
           <div className="flex items-end gap-1.5 h-32">
             {buckets.map((n, i) => {
-              const tone = i <= 3 ? "bg-bad/60" : i <= 6 ? "bg-warn/70" : "bg-good/75";
+              const mid = i * 10 + 5;
+              const tone = mid < 55 ? "bg-bad/60" : mid < 59 ? "bg-warn/70" : "bg-good/75";
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                   <span className="text-[10px] font-mono text-ink-3 tabular">{n > 0 ? n : ""}</span>

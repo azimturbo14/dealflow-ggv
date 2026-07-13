@@ -207,9 +207,9 @@ export function EvaluateModal({ open, onClose, onCreate, nextId }: {
                 const n = i + 1; const done = step > n; const active = step === n;
                 return (
                   <div key={label} className="flex items-center gap-2">
-                    <button onClick={() => setStep(n)}
+                    <button onClick={() => { if (n <= step || form.name.trim()) setStep(n); }}
                       className={cn("w-6 h-6 rounded-full grid place-items-center text-[11px] font-semibold transition-colors",
-                        done || active ? "bg-accent text-white" : "bg-tint text-ink-3")}>
+                        done || active ? "bg-accent text-accent-fg" : "bg-tint text-ink-3")}>
                       {done ? <Check className="w-3.5 h-3.5" /> : n}
                     </button>
                     <span className={cn("text-[11px] font-medium hidden sm:inline", active ? "text-ink" : "text-ink-3")}>{label}</span>
